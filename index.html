@@ -1,0 +1,1913 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>evdeyiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Unbounded:wght@600;700;800&display=swap">
+<style>
+/* evdeyiz — "Apartman" görsel kimliği
+   Düzen: üst bar + 640px pano + sağda apartman cephesi; her ekranda ortada yüzen kumanda (dock).
+   Dünya: gece manzarası, ışığı yanan pencereler, apartman panosu, market fişi. Gece öncelikli (dark-first). */
+:root {
+  --bg: #120E24;
+  --bg-2: #1B1633;
+  --bg-3: #251E45;
+  --line: #2F2756;
+  --fg: #F5F0FF;
+  --fg-2: #ADA3D1;
+  --fg-3: #7B71A3;
+  --lamp: #FFC247;
+  --lamp-ink: #2A1A00;
+  --lamp-text: #FFC247;
+  --lamp-soft: rgba(255, 194, 71, .14);
+  --lamp-glow: 0 0 28px rgba(255, 194, 71, .45);
+  --tomato: #FF6B4A;
+  --tomato-soft: rgba(255, 107, 74, .16);
+  --mint: #5BE3B5;
+  --glass: rgba(18, 14, 36, .78);
+  --shadow: 0 14px 40px rgba(5, 3, 15, .45);
+  --paper: #FFF8E7;
+  --paper-ink: #2A2233;
+  /* Cephe illüstrasyonu her iki temada da gece kalır */
+  --facade: #241C4A;
+  --facade-2: #2E2560;
+  --glass-off: #352C66;
+
+  --display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F4F1FB; --bg-2: #FFFFFF; --bg-3: #ECE7F7; --line: #E1DAF2;
+    --fg: #1B1533; --fg-2: #5E557E; --fg-3: #8D85AA;
+    --lamp: #F5A800; --lamp-text: #9A6100; --lamp-soft: rgba(245, 168, 0, .16); --lamp-glow: 0 0 24px rgba(245, 168, 0, .35);
+    --tomato: #E8492A; --tomato-soft: rgba(232, 73, 42, .12); --mint: #0FA57A;
+    --glass: rgba(255, 255, 255, .84); --shadow: 0 14px 40px rgba(40, 25, 90, .14);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #F4F1FB; --bg-2: #FFFFFF; --bg-3: #ECE7F7; --line: #E1DAF2;
+  --fg: #1B1533; --fg-2: #5E557E; --fg-3: #8D85AA;
+  --lamp: #F5A800; --lamp-text: #9A6100; --lamp-soft: rgba(245, 168, 0, .16); --lamp-glow: 0 0 24px rgba(245, 168, 0, .35);
+  --tomato: #E8492A; --tomato-soft: rgba(232, 73, 42, .12); --mint: #0FA57A;
+  --glass: rgba(255, 255, 255, .84); --shadow: 0 14px 40px rgba(40, 25, 90, .14);
+  color-scheme: light;
+}
+
+/* ───────── Base ───────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+p { margin: 0; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+svg { display: block; flex: none; }
+:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; border-radius: 8px; }
+[hidden] { display: none !important; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--fg-2); }
+.faint { color: var(--fg-3); }
+.sm { font-size: 13px; }
+.xs { font-size: 12px; }
+.b { font-weight: 600; }
+.grow { flex: 1; min-width: 0; }
+.row { display: flex; align-items: center; gap: 12px; }
+.ellip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ico { width: 20px; height: 20px; }
+.ico-sm { width: 16px; height: 16px; }
+.display { font-family: var(--display); letter-spacing: -.02em; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--lamp-text); }
+
+/* ───────── Buttons ───────── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px; border-radius: 14px; font-weight: 600; font-size: 15px; background: var(--bg-3); color: var(--fg); border: 1px solid transparent; transition: transform .12s, background-color .15s, box-shadow .15s; white-space: nowrap; }
+.btn:hover { background: var(--line); }
+.btn:active { transform: translateY(1px); }
+.btn.lamp { background: var(--lamp); color: var(--lamp-ink); box-shadow: var(--lamp-glow); }
+.btn.lamp:hover { filter: brightness(1.06); }
+.btn.ghost { background: transparent; border-color: var(--line); }
+.btn.ghost:hover { background: var(--bg-3); }
+.btn.on { background: var(--lamp-soft); color: var(--lamp-text); border-color: transparent; }
+.btn.lg { min-height: 54px; font-size: 16px; padding: 0 26px; border-radius: 16px; }
+.btn.sm { min-height: 34px; font-size: 13px; padding: 0 12px; border-radius: 11px; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: .45; pointer-events: none; box-shadow: none; }
+.icon-btn { width: 40px; height: 40px; border-radius: 12px; display: inline-grid; place-items: center; color: var(--fg); transition: background-color .15s; }
+.icon-btn:hover { background: var(--bg-3); }
+
+/* ───────── Brand: pencere işareti ───────── */
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.03em; }
+.mark { width: 34px; height: 34px; border-radius: 10px; background: var(--facade); display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 6px; flex: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); }
+.mark i { border-radius: 2px; background: var(--glass-off); }
+.mark i.on { background: #FFC247; box-shadow: 0 0 8px rgba(255, 194, 71, .8); }
+
+/* ───────── Avatars (squircle) ───────── */
+.av { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; color: #fff; flex: none; font-size: 16px; user-select: none; }
+.av.s32 { width: 32px; height: 32px; border-radius: 10px; font-size: 13px; }
+.av.anon { background: var(--bg-3); color: var(--fg-2); }
+.star { width: 16px; height: 16px; color: var(--lamp); display: inline-block; vertical-align: -2px; margin-left: 3px; }
+.daire { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--fg-2); background: var(--bg-3); border-radius: 6px; padding: 1px 6px; font-variant-numeric: tabular-nums; }
+
+/* ───────── Layout ───────── */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.top-inner { max-width: 1040px; margin: 0 auto; height: 64px; display: flex; align-items: center; gap: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top .search { flex: 1; max-width: 420px; margin-left: 24px; }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 640px) 320px; gap: 32px; justify-content: center; padding-block: 24px 120px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 88px; align-self: start; }
+
+.search { display: flex; align-items: center; gap: 10px; height: 42px; border-radius: 14px; background: var(--bg-3); padding: 0 14px; color: var(--fg-3); border: 1px solid transparent; }
+.search:focus-within { border-color: var(--lamp); color: var(--lamp); }
+.search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--fg); }
+
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.page-head h1 { font-family: var(--display); font-size: clamp(26px, 5vw, 34px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.page-head p { color: var(--fg-2); margin-top: 6px; }
+.seg { display: inline-flex; background: var(--bg-3); border-radius: 12px; padding: 3px; flex: none; }
+.seg button { padding: 7px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--fg-2); }
+.seg button[aria-pressed="true"] { background: var(--bg-2); color: var(--fg); box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+
+.card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 20px; }
+.pad { padding: 16px; }
+
+/* Dock (kumanda) */
+.dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; display: flex; gap: 2px; padding: 6px; border-radius: 22px; background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.dock button { position: relative; width: 76px; height: 54px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--fg-2); transition: background-color .15s, color .15s; }
+.dock button:hover { color: var(--fg); }
+.dock button svg { width: 22px; height: 22px; }
+.dock button[aria-current="page"] { background: var(--lamp-soft); color: var(--lamp); }
+.dock button[aria-current="page"]::before { content: ""; position: absolute; top: 5px; right: 14px; width: 6px; height: 6px; border-radius: 2px; background: var(--lamp); box-shadow: 0 0 8px var(--lamp); }
+.dock .badge { position: absolute; top: 4px; left: 50%; margin-left: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--tomato); color: #fff; font-size: 11px; display: grid; place-items: center; }
+.fab { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 41; width: 56px; height: 56px; border-radius: 18px; background: var(--lamp); color: var(--lamp-ink); display: none; place-items: center; box-shadow: var(--lamp-glow), var(--shadow); }
+.fab svg { width: 26px; height: 26px; }
+
+/* ───────── Apartman cephesi ───────── */
+.facade { background: linear-gradient(180deg, var(--facade-2), var(--facade)); border-radius: 20px; padding: 14px 14px 0; position: relative; overflow: hidden; color: #F5F0FF; }
+.facade::before { content: ""; position: absolute; inset: 0 0 auto; height: 60%; background: radial-gradient(60% 80% at 80% 0%, rgba(255, 194, 71, .12), transparent 70%); pointer-events: none; }
+.facade-roof { height: 10px; margin: 0 -14px 12px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 14px, transparent 14px 20px); }
+.facade-grid { display: grid; grid-template-columns: repeat(var(--cols, 8), 1fr); gap: 7px; position: relative; }
+.w { aspect-ratio: 3 / 4; border-radius: 3px; background: var(--glass-off); position: relative; }
+.w::after { content: ""; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: rgba(0, 0, 0, .25); }
+.w.on { background: linear-gradient(180deg, #FFD978, #FFB22E); box-shadow: 0 0 10px rgba(255, 194, 71, .55); }
+.w.tw { animation: flick 7s infinite; }
+.w.me { outline: 2px solid #fff; outline-offset: 2px; }
+@keyframes flick { 0%, 46%, 100% { background: var(--glass-off); box-shadow: none; } 50%, 96% { background: linear-gradient(180deg, #FFD978, #FFB22E); box-shadow: 0 0 10px rgba(255, 194, 71, .55); } }
+.facade-door { width: 22%; height: 22px; margin: 10px auto 0; border-radius: 8px 8px 0 0; background: rgba(0, 0, 0, .3); }
+.facade-cap { padding: 12px 2px 14px; position: relative; }
+.facade-num { font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.facade-cap p { font-size: 13px; color: rgba(245, 240, 255, .75); }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(91, 227, 181, .55); } 70% { box-shadow: 0 0 0 8px rgba(91, 227, 181, 0); } 100% { box-shadow: 0 0 0 0 rgba(91, 227, 181, 0); } }
+
+/* Side lists */
+.list-title { font-family: var(--display); font-size: 15px; font-weight: 700; padding: 14px 16px 6px; letter-spacing: -.01em; }
+.list-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 16px; transition: background-color .15s; }
+button.list-row:hover { background: var(--bg-3); }
+.trend-rank { font-family: var(--display); font-weight: 700; font-size: 13px; color: var(--fg-3); width: 18px; font-variant-numeric: tabular-nums; }
+.list-more { padding: 10px 16px 14px; color: var(--lamp-text); font-size: 13px; font-weight: 600; }
+.side-foot { font-size: 12px; color: var(--fg-3); display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0 4px; }
+
+/* ───────── Pencereler (hikâyeler) ───────── */
+.windows { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: none; }
+.windows::-webkit-scrollbar { display: none; }
+.win-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 72px; flex: none; }
+.win { width: 66px; height: 80px; border-radius: 14px 14px 8px 8px; position: relative; display: grid; place-items: center; background: var(--glass-off); border: 3px solid var(--bg-3); overflow: hidden; }
+.win::before, .win::after { content: ""; position: absolute; background: rgba(0, 0, 0, .22); }
+.win::before { left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+.win::after { top: 42%; left: 0; right: 0; height: 2px; }
+.win.lit { background: linear-gradient(180deg, #FFDF8A, #FFAE22); border-color: #3A2C72; box-shadow: 0 0 18px rgba(255, 194, 71, .5); }
+.win .who { position: relative; z-index: 1; width: 34px; height: 34px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 14px; color: #fff; margin-top: 18px; }
+.win.lit .who { background: rgba(42, 26, 0, .55); }
+.win:not(.lit) .who { background: rgba(255, 255, 255, .12); color: var(--fg-2); }
+.win.mine { background: var(--bg-3); border-style: dashed; border-color: var(--line); }
+.win.mine::before, .win.mine::after { display: none; }
+.win.mine .plus { width: 30px; height: 30px; border-radius: 10px; background: var(--lamp); color: var(--lamp-ink); display: grid; place-items: center; }
+.win-name { font-size: 12px; color: var(--fg-2); max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ───────── Işık yoklaması ───────── */
+.light { display: flex; align-items: center; gap: 16px; padding: 16px; }
+.light-week { display: grid; grid-template-columns: repeat(7, 18px); gap: 5px; flex: none; }
+.light-week i { height: 24px; border-radius: 3px; background: var(--bg-3); }
+.light-week i.on { background: linear-gradient(180deg, #FFD978, #FFB22E); box-shadow: 0 0 8px rgba(255, 194, 71, .5); }
+.light h3 { font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+
+/* ───────── Composer ───────── */
+.composer { padding: 14px 16px; display: flex; gap: 12px; }
+.composer textarea { width: 100%; background: none; border: 0; outline: none; resize: none; font-size: 17px; line-height: 1.4; padding: 9px 0; min-height: 48px; }
+.composer textarea::placeholder { color: var(--fg-3); }
+.composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--fg-2); padding: 6px 10px 6px 6px; border-radius: 10px; }
+.toggle:hover { background: var(--bg-3); }
+.switch { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; transition: background-color .15s; flex: none; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.toggle[aria-pressed="true"] { color: var(--fg); }
+.toggle[aria-pressed="true"] .switch { background: var(--lamp); }
+.toggle[aria-pressed="true"] .switch::after { transform: translateX(14px); }
+.counter { font-size: 12px; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 16px; background: var(--lamp-soft); }
+
+/* ───────── Pano notları ───────── */
+.note { padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: border-color .15s; }
+.note:hover { border-color: var(--fg-3); }
+.note-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.note-name { font-weight: 600; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.note-name > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-meta { font-size: 13px; color: var(--fg-3); display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+.note-text { font-size: 16px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.hashtag { color: var(--lamp-text); font-weight: 500; }
+.hashtag:hover { text-decoration: underline; }
+.note-foot { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.bende { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 10px; border-radius: 12px; background: var(--bg-3); font-weight: 600; font-size: 14px; transition: background-color .15s, color .15s, box-shadow .15s; }
+.bende:hover { background: var(--line); }
+.bende .cnt { color: var(--fg-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.bende.on { background: var(--lamp); color: var(--lamp-ink); box-shadow: var(--lamp-glow); }
+.bende.on .cnt { color: var(--lamp-ink); }
+.bende.on svg { animation: wave .5s ease; transform-origin: 70% 90%; }
+@keyframes wave { 0% { transform: rotate(0); } 30% { transform: rotate(-18deg); } 60% { transform: rotate(12deg); } 100% { transform: rotate(0); } }
+.mini { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 10px; border-radius: 12px; color: var(--fg-2); font-size: 13px; font-variant-numeric: tabular-nums; transition: background-color .15s, color .15s; }
+.mini:hover { background: var(--bg-3); color: var(--fg); }
+.mini.on { color: var(--mint); }
+.note-foot .seen { margin-left: auto; font-size: 12px; color: var(--fg-3); display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.shared-by { font-size: 12px; font-weight: 600; color: var(--mint); display: flex; align-items: center; gap: 6px; }
+
+/* Apartman toplantısı (anket) */
+.meeting { border-radius: 16px; background: var(--bg-3); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.meeting-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); display: flex; align-items: center; gap: 6px; }
+.opt { position: relative; min-height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; overflow: hidden; background: var(--bg-2); text-align: left; }
+button.opt { border: 1px solid var(--line); font-weight: 600; transition: border-color .15s; }
+button.opt:hover { border-color: var(--lamp); }
+.opt .bar { position: absolute; inset: 0 auto 0 0; background: var(--line); transition: width .6s cubic-bezier(.2, .8, .2, 1); }
+.opt.win-opt .bar { background: var(--lamp-soft); }
+.opt > span { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; }
+.opt.win-opt > span:first-of-type { font-weight: 700; }
+.opt .pct { font-family: var(--display); font-weight: 700; font-size: 13px; }
+
+/* Fiş (maaş hesabı) */
+.receipt { background: var(--paper); color: var(--paper-ink); border-radius: 6px 6px 0 0; padding: 18px 18px 26px; position: relative; font-variant-numeric: tabular-nums; max-width: 100%;
+  -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 0 100% / 18px 100% repeat-x, linear-gradient(#000, #000) top / 100% calc(100% - 7px) no-repeat;
+          mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 0 100% / 18px 100% repeat-x, linear-gradient(#000, #000) top / 100% calc(100% - 7px) no-repeat; }
+.receipt-head { text-align: center; padding-bottom: 10px; border-bottom: 2px dashed rgba(42, 34, 51, .3); }
+.receipt-head b { font-family: var(--display); font-size: 17px; letter-spacing: -.01em; display: block; }
+.receipt-head span { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+.r-line { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 14px; }
+.r-line.minus span:last-child { color: #C0392B; }
+.r-sep { border-top: 2px dashed rgba(42, 34, 51, .3); margin: 6px 0; }
+.r-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 4px; }
+.r-total span { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.r-total b { font-family: var(--display); font-size: clamp(30px, 8vw, 42px); font-weight: 800; letter-spacing: -.03em; }
+.r-foot { text-align: center; font-size: 11px; opacity: .6; margin-top: 10px; letter-spacing: .05em; }
+.stamp { position: relative; display: table; margin: 14px auto 2px; transform: rotate(-7deg); font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: .02em; color: #D63A1E; border: 3px solid #D63A1E; border-radius: 10px; padding: 4px 10px; opacity: .85; mix-blend-mode: multiply; pointer-events: none; }
+.stamp.go { color: #1A7F5A; border-color: #1A7F5A; }
+.receipt.mini-r { padding: 14px 14px 22px; }
+.receipt.mini-r .r-total b { font-size: 28px; }
+.receipt.mini-r .stamp { font-size: 15px; margin-top: 10px; }
+.embed { display: block; width: 100%; text-align: left; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .25)); max-width: 360px; }
+.embed-cap { font-size: 12px; color: var(--fg-2); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+
+/* Empty */
+.empty { padding: 36px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.empty .win { width: 54px; height: 66px; }
+.empty h2 { font-family: var(--display); font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.empty p { color: var(--fg-2); max-width: 340px; }
+
+/* ───────── Oyun odası ───────── */
+.games { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.games::-webkit-scrollbar { display: none; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 5px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); font-weight: 600; font-size: 13px; flex: none; transition: border-color .15s; }
+.chip.txt { padding: 0 14px; }
+.chip:hover { border-color: var(--fg-3); }
+.chip[aria-pressed="true"] { background: var(--lamp); color: var(--lamp-ink); border-color: var(--lamp); }
+.gcode { width: 28px; height: 28px; border-radius: 8px; color: #fff; font-family: var(--display); font-size: 9px; font-weight: 700; display: grid; place-items: center; flex: none; }
+.gcode.lg { width: 46px; height: 46px; border-radius: 14px; font-size: 11px; }
+.lan { overflow: hidden; }
+.lan-art { padding: 20px; background:
+  repeating-linear-gradient(0deg, rgba(255, 255, 255, .03) 0 1px, transparent 1px 4px),
+  radial-gradient(90% 120% at 100% 0%, rgba(255, 194, 71, .35), transparent 60%),
+  linear-gradient(135deg, #2A1F5C, #160F33); color: #F5F0FF; }
+.lan-art h3 { font-family: var(--display); font-size: clamp(22px, 5vw, 28px); font-weight: 800; letter-spacing: -.03em; margin: 8px 0 4px; }
+.lan-art p { color: rgba(245, 240, 255, .75); font-size: 14px; }
+.lan-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #FFC247; }
+.slots { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
+.slots i { height: 14px; border-radius: 3px; background: var(--bg-3); }
+.slots i.on { background: var(--lamp); }
+.slots i.me { background: var(--mint); }
+.lobby { padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 8px; background: var(--bg-3); color: var(--fg-2); }
+.tag.hot { background: var(--tomato-soft); color: var(--tomato); }
+.tag.mine { background: var(--lamp-soft); color: var(--lamp-text); }
+
+/* ───────── Odalar ───────── */
+.rooms { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rooms > *, .calc > *, .wrap > * { min-width: 0; }
+.room { min-width: 0; text-align: left; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 150px; transition: border-color .15s, transform .15s; }
+.room:hover { border-color: var(--fg-3); transform: translateY(-2px); }
+.room-ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+.room-ic svg { width: 22px; height: 22px; }
+.room h3 { font-family: var(--display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+.room .sub { font-size: 13px; color: var(--fg-2); margin-top: 2px; }
+.room .last { font-size: 13px; color: var(--fg-3); margin-top: auto; }
+.online { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.thread-head { display: flex; align-items: center; gap: 12px; }
+.thread-head h1 { font-family: var(--display); font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+.thread { padding: 16px; display: flex; flex-direction: column; min-height: 50vh; }
+.bgroup { display: flex; gap: 8px; align-items: flex-end; margin-top: 12px; }
+.bgroup.me { justify-content: flex-end; }
+.bubbles { display: flex; flex-direction: column; gap: 3px; max-width: 78%; }
+.bgroup.me .bubbles { align-items: flex-end; }
+.bname { font-size: 12px; color: var(--fg-3); margin: 0 0 2px 4px; }
+.bubble { padding: 10px 14px; border-radius: 18px; background: var(--bg-3); word-break: break-word; }
+.bgroup:not(.me) .bubble { border-bottom-left-radius: 6px; }
+.bgroup.me .bubble { background: var(--lamp); color: var(--lamp-ink); border-bottom-right-radius: 6px; }
+.typing { color: var(--fg-3); font-size: 13px; padding: 8px 0 0 40px; display: flex; align-items: center; gap: 4px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--fg-3); animation: blink 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.composer-dock { position: sticky; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.quick::-webkit-scrollbar { display: none; }
+.quick button { flex: none; font-size: 13px; padding: 6px 12px; border-radius: 10px; background: var(--bg-3); }
+.quick button:hover { background: var(--line); }
+.msg-form { display: flex; gap: 8px; }
+.msg-form input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); padding: 0 14px; outline: none; }
+.msg-form input:focus { border-color: var(--lamp); }
+.send { width: 44px; height: 44px; border-radius: 12px; background: var(--lamp); color: var(--lamp-ink); display: grid; place-items: center; flex: none; }
+.send svg { width: 18px; height: 18px; }
+
+/* ───────── Hesap ───────── */
+.calc { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.fields { display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; color: var(--fg-2); font-weight: 500; }
+.input { position: relative; }
+.input input, .input select, .input textarea { width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); padding: 0 14px; font-size: 16px; outline: none; transition: border-color .15s; }
+.input textarea { height: auto; padding: 12px 14px; resize: vertical; line-height: 1.4; font-size: 15px; }
+.input input:focus, .input select:focus, .input textarea:focus { border-color: var(--lamp); }
+.input .unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--fg-3); font-size: 13px; pointer-events: none; }
+.input.has-unit input { padding-right: 52px; font-variant-numeric: tabular-nums; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.calc-side { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-row .btn { flex: 1; }
+.note-s { font-size: 12px; color: var(--fg-3); }
+
+/* ───────── Dairem (profil) ───────── */
+.home-hero { overflow: hidden; }
+.home-art { background: linear-gradient(180deg, var(--facade-2), var(--facade)); padding: 22px 20px 0; display: flex; align-items: flex-end; gap: 18px; position: relative; }
+.home-art::before { content: ""; position: absolute; inset: 0; background: radial-gradient(50% 90% at 15% 100%, rgba(255, 194, 71, .3), transparent 70%); }
+.big-win { width: 112px; height: 136px; border-radius: 20px 20px 10px 10px; background: linear-gradient(180deg, #FFDF8A, #FFAE22); box-shadow: 0 0 40px rgba(255, 194, 71, .55); position: relative; display: grid; place-items: end center; overflow: hidden; flex: none; border: 5px solid #3A2C72; border-bottom: 0; }
+.big-win::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #3A2C72; transform: translateX(-50%); }
+.big-win::after { content: ""; position: absolute; left: 0; right: 0; top: 40%; height: 4px; background: #3A2C72; }
+.big-win .sil { width: 64px; height: 76px; border-radius: 32px 32px 8px 8px; background: rgba(42, 26, 0, .6); display: grid; place-items: center; color: #FFE7A8; font-family: var(--display); font-weight: 800; font-size: 28px; position: relative; z-index: 1; }
+.plate { position: relative; margin-bottom: 18px; background: linear-gradient(180deg, #E8C36A, #B88A2E); color: #2A1A00; border-radius: 8px; padding: 8px 14px; font-family: var(--display); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 4px 10px rgba(0, 0, 0, .3); }
+.plate small { display: block; font-size: 10px; letter-spacing: .14em; font-weight: 700; opacity: .75; }
+.plate b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.home-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+.home-body h2 { font-family: var(--display); font-size: 24px; font-weight: 800; letter-spacing: -.03em; }
+.title-chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--lamp-text); background: var(--lamp-soft); padding: 5px 10px; border-radius: 10px; }
+.title-chip .w { width: 10px; border-radius: 2px; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--fg-2); font-size: 14px; }
+.meta-row span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
+.stat { background: var(--bg-3); border-radius: 14px; padding: 10px 12px; }
+.stat b { font-family: var(--display); font-size: 20px; font-weight: 800; display: block; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--fg-2); }
+
+.sakin { border-radius: 20px; overflow: hidden; background: linear-gradient(160deg, #2A1F5C, #160F33); color: #F5F0FF; border: 1px solid rgba(255, 255, 255, .08); max-width: 520px; box-shadow: var(--shadow); }
+.sakin-top { display: flex; justify-content: space-between; padding: 12px 16px; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: #FFC247; border-bottom: 1px dashed rgba(255, 255, 255, .15); }
+.sakin-body { display: flex; gap: 16px; padding: 16px; }
+.sakin .big-win { width: 84px; height: 104px; border-width: 4px; border-radius: 16px 16px 8px 8px; }
+.sakin .big-win .sil { width: 48px; height: 58px; font-size: 22px; }
+.sakin .big-win::before { width: 3px; } .sakin .big-win::after { height: 3px; }
+.sakin-name { font-family: var(--display); font-size: 19px; font-weight: 800; letter-spacing: -.02em; word-break: break-all; }
+.sakin-title { color: #FFC247; font-weight: 600; font-size: 13px; margin: 2px 0 12px; }
+.sakin dl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 0; }
+.sakin dt { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: rgba(245, 240, 255, .6); }
+.sakin dd { margin: 2px 0 0; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
+.sakin-foot { display: flex; justify-content: space-between; gap: 10px; padding: 10px 16px; font-size: 11px; color: rgba(245, 240, 255, .6); background: rgba(0, 0, 0, .2); font-variant-numeric: tabular-nums; }
+
+.badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.badge { padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.badge .win { width: 42px; height: 52px; border-width: 2px; border-radius: 10px 10px 6px 6px; }
+.badge b { font-size: 13px; }
+.badge span { font-size: 11px; color: var(--fg-3); line-height: 1.3; }
+.ladder { display: flex; flex-direction: column; }
+.step { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+.step + .step { border-top: 1px solid var(--line); }
+.step .w { width: 16px; flex: none; }
+
+/* ───────── Modal / sheet ───────── */
+.ov { position: fixed; inset: 0; z-index: 70; background: rgba(8, 5, 20, .6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.sheet { background: var(--bg-2); border: 1px solid var(--line); border-radius: 24px; width: 100%; max-width: 560px; box-shadow: var(--shadow); display: flex; flex-direction: column; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow-y: auto; }
+.sheet-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 6px 20px; }
+.sheet-head h2 { font-family: var(--display); font-size: 19px; font-weight: 700; letter-spacing: -.02em; flex: 1; }
+.sheet-body { padding: 8px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+.danger { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.btn.red { background: var(--tomato); color: #fff; }
+.btn.red-ghost { background: transparent; color: var(--tomato); border-color: var(--tomato); }
+.share-text { width: 100%; min-height: 110px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); resize: none; }
+.theme-seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg-3); border-radius: 12px; padding: 3px; }
+.theme-seg button { padding: 9px; border-radius: 9px; font-weight: 600; color: var(--fg-2); }
+.theme-seg button[aria-pressed="true"] { background: var(--bg-2); color: var(--fg); }
+
+/* Kayıt */
+.onb .sheet { max-width: 520px; min-height: min(640px, calc(100dvh - 48px)); }
+.onb-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 0; }
+.onb-body { padding: 18px 28px 8px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.onb-body h2 { font-family: var(--display); font-size: clamp(24px, 6vw, 30px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.onb-body .hint { color: var(--fg-2); margin-top: -6px; }
+.onb-foot { padding: 14px 28px 26px; display: flex; flex-direction: column; gap: 14px; }
+.floors { display: flex; gap: 6px; }
+.floors i { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-3); }
+.floors i.on { background: var(--lamp); box-shadow: 0 0 8px rgba(255, 194, 71, .5); }
+.choice { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px; border-radius: 14px; background: var(--bg-3); border: 2px solid transparent; transition: border-color .15s; }
+.choice + .choice { margin-top: 8px; }
+.choice:hover { border-color: var(--line); }
+.choice .w { width: 22px; flex: none; }
+.choice[aria-pressed="true"] { border-color: var(--lamp); }
+.choice .sub { display: block; font-size: 13px; color: var(--fg-2); margin-top: 2px; }
+.game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.game-pick { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: var(--bg-3); border: 2px solid transparent; font-weight: 600; font-size: 14px; text-align: left; }
+.game-pick:hover { border-color: var(--line); }
+.game-pick[aria-pressed="true"] { border-color: var(--lamp); }
+
+/* Pencere görüntüleyici (hikâye) */
+.story-ov { position: fixed; inset: 0; z-index: 80; background: rgba(8, 5, 20, .92); display: grid; place-items: center; }
+.story-close { position: absolute; top: calc(14px + env(safe-area-inset-top, 0px)); right: calc(14px + env(safe-area-inset-right, 0px)); color: #fff; z-index: 3; }
+.story-close:hover { background: rgba(255, 255, 255, .12); }
+.story-frame { position: relative; width: min(400px, 100vw); height: min(700px, 100vh); height: min(700px, 100dvh); border-radius: 28px 28px 14px 14px; overflow: hidden; color: #fff; display: flex; flex-direction: column; border: 8px solid #3A2C72; box-shadow: 0 0 60px rgba(255, 194, 71, .25); }
+.story-bars { display: flex; gap: 4px; padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 0; position: relative; z-index: 2; }
+.story-bars i { flex: 1; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, .35); overflow: hidden; }
+.story-bars i b { display: block; height: 100%; width: 0; background: #fff; }
+.story-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; position: relative; z-index: 2; }
+.story-content { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px 28px; gap: 12px; }
+.story-big { font-family: var(--display); font-size: clamp(34px, 10vw, 50px); font-weight: 800; letter-spacing: -.04em; line-height: 1.02; text-wrap: balance; }
+.story-sub { font-size: 18px; opacity: .92; line-height: 1.4; }
+.story-tap { position: absolute; top: 70px; bottom: 80px; z-index: 1; }
+.story-tap.prev { left: 0; width: 33%; }
+.story-tap.next { right: 0; width: 67%; }
+.story-reply { display: flex; gap: 8px; padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 2; }
+.story-reply input { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .5); background: rgba(0, 0, 0, .15); color: #fff; padding: 0 14px; outline: none; }
+.story-reply input::placeholder { color: rgba(255, 255, 255, .75); }
+.story-reply .icon-btn { color: #fff; }
+
+/* ───────── Landing ───────── */
+.landing { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.land-top { max-width: 1120px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding-block: 18px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.land-hero { max-width: 1120px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); flex: 1; }
+.land-copy h1 { font-family: var(--display); font-size: clamp(40px, 6.6vw, 74px); font-weight: 800; letter-spacing: -.045em; line-height: .98; margin-top: 14px; }
+.land-copy h1 em { font-style: normal; color: var(--lamp); text-shadow: 0 0 30px rgba(255, 194, 71, .35); }
+.land-copy .lead { font-size: 18px; color: var(--fg-2); margin: 20px 0 28px; max-width: 480px; }
+.land-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.land-live { display: inline-flex; align-items: center; gap: 8px; color: var(--fg-2); font-size: 14px; }
+.land-live b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.land-art { position: relative; }
+.land-art .facade { padding: 18px 18px 0; border-radius: 28px; box-shadow: var(--shadow); }
+.land-art .facade-grid { gap: 9px; }
+.float-note { position: absolute; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow); font-size: 14px; max-width: 260px; }
+.float-note.n1 { left: -28px; top: 18%; }
+.float-note.n2 { right: -18px; bottom: 16%; }
+.float-note .bende { height: 30px; font-size: 12px; padding: 0 10px 0 8px; margin-top: 8px; }
+.floors-strip { max-width: 1120px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding-block: 0 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.floor { padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+.floor .room-ic { flex: none; }
+.floor h3 { font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 4px; }
+.floor p { font-size: 14px; color: var(--fg-2); }
+.land-foot { text-align: center; font-size: 12px; color: var(--fg-3); padding: 8px 16px 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; }
+
+/* Toast */
+#toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -20px); background: var(--lamp); color: var(--lamp-ink); padding: 11px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: all .22s; z-index: 90; max-width: calc(100% - 32px); box-shadow: var(--lamp-glow); text-align: center; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ───────── Responsive ───────── */
+@media (max-width: 1000px) {
+  .wrap { grid-template-columns: minmax(0, 640px); }
+  .aside { display: none; }
+  .calc { grid-template-columns: 1fr; }
+  .calc-side { position: static; order: -1; }
+}
+@media (max-width: 900px) {
+  .land-hero { grid-template-columns: 1fr; gap: 28px; }
+  .float-note.n1 { left: 8px; top: 8px; }
+  .float-note.n2 { right: 8px; bottom: 12px; }
+  .floors-strip { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .top .search, .top-actions .desk { display: none; }
+  .top-inner { height: 58px; }
+  .wrap { padding-block: 16px 128px; gap: 16px; }
+  .dock { left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); transform: none; justify-content: space-between; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .dock button { flex: 1; width: auto; }
+  .fab { display: grid; }
+  .app.in-room .fab { display: none; }
+  .rooms { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .room { min-height: 140px; padding: 14px; }
+  .badges { grid-template-columns: repeat(2, 1fr); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .ov { padding: 0; align-items: flex-end; }
+  .sheet { border-radius: 24px 24px 0 0; max-height: 92vh; max-height: 92dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .onb .sheet { min-height: 100%; max-height: none; border-radius: 0; }
+  .onb-body, .onb-foot { padding-left: 20px; padding-right: 20px; }
+  .story-frame { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; border-width: 0; }
+  .float-note { display: none; }
+  .land-copy .lead { font-size: 16px; }
+  .home-art { padding: 18px 16px 0; }
+  .big-win { width: 92px; height: 112px; }
+}
+@media (max-width: 400px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .game-grid { grid-template-columns: 1fr; }
+  .rooms { grid-template-columns: 1fr; }
+  .dock button { font-size: 10px; }
+  .note-foot .seen { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ───────── Bağlılık sistemleri ───────── */
+.ico-xs { width: 13px; height: 13px; display: inline-block; vertical-align: -2px; }
+.tea-chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 11px; background: var(--lamp-soft); color: var(--lamp-text); font-weight: 700; font-size: 14px; transition: transform .12s; }
+.tea-chip:hover { transform: translateY(-1px); }
+.bell { position: relative; }
+.dot-badge { position: absolute; top: 4px; right: 4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--tomato); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--bg); }
+.new-pill { position: sticky; top: 76px; z-index: 20; align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 999px; background: var(--lamp); color: var(--lamp-ink); font-weight: 700; font-size: 14px; box-shadow: var(--lamp-glow), var(--shadow); animation: drop .4s cubic-bezier(.2, .9, .3, 1.3); margin-bottom: -6px; }
+@keyframes drop { from { transform: translateY(-16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.note.fresh { border-color: var(--lamp); box-shadow: 0 0 0 3px var(--lamp-soft); }
+
+.today { display: grid; grid-template-columns: 1fr 1fr; }
+.today-tile { display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-width: 0; }
+.today-tile + .today-tile { border-left: 1px solid var(--line); }
+.today-tile h3 { font-family: var(--display); font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.today-tile.hot h3 { color: var(--fg); }
+.today .light-week { grid-template-columns: repeat(7, 9px); gap: 3px; }
+.today .light-week i { height: 22px; border-radius: 2px; }
+.pill-done { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--mint); flex: none; }
+.bag { width: 44px; height: 44px; border-radius: 14px; background: var(--tomato-soft); color: var(--tomato); display: grid; place-items: center; flex: none; }
+.today-tile.done .bag { background: var(--bg-3); color: var(--fg-3); }
+.bag.wiggle { animation: wiggle 2.6s ease-in-out infinite; }
+@keyframes wiggle { 0%, 82%, 100% { transform: rotate(0); } 86% { transform: rotate(-10deg); } 90% { transform: rotate(9deg); } 94% { transform: rotate(-6deg); } }
+.bag.big { width: 84px; height: 84px; border-radius: 26px; margin: 4px auto 0; }
+.bag.big svg { width: 40px; height: 40px; }
+
+.checklist { padding: 16px; display: flex; flex-direction: column; gap: 10px; border-color: var(--lamp); background: linear-gradient(180deg, var(--lamp-soft), transparent 70%), var(--bg-2); }
+.checklist h3 { font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.meter { height: 6px; border-radius: 999px; background: var(--bg-3); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--lamp); border-radius: 999px; transition: width .5s; box-shadow: 0 0 8px rgba(255, 194, 71, .6); }
+.check-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--bg-3); text-align: left; font-weight: 500; transition: background-color .15s; }
+.check-row:hover { background: var(--line); }
+.check-row .tick { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--fg-3); display: grid; place-items: center; flex: none; }
+.check-row.done { background: transparent; color: var(--fg-3); text-decoration: line-through; cursor: default; }
+.check-row.done .tick { background: var(--mint); border-color: var(--mint); color: #0B2A20; }
+
+.meeting-card { display: flex; flex-direction: column; gap: 10px; }
+.meeting-card .q { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.meeting.flat { background: none; padding: 0; }
+
+.leaders .list-title { display: flex; align-items: center; gap: 8px; color: var(--fg); }
+.leaders .list-title svg { color: var(--lamp-text); }
+.leader-me { margin: 6px 12px 12px; padding: 10px 12px; border-radius: 12px; background: var(--lamp-soft); font-size: 13px; color: var(--fg); }
+.feed-leaders { display: none; }
+
+/* Süslenmiş pencere */
+.big-win .curtain { position: absolute; top: 0; bottom: 0; width: 30%; z-index: 2; opacity: .92; }
+.big-win .curtain.l { left: 0; border-radius: 0 0 60% 0; }
+.big-win .curtain.r { right: 0; border-radius: 0 0 0 60%; }
+.big-win .pet { position: absolute; left: 10%; bottom: 6px; z-index: 3; font-size: 26px; line-height: 1; }
+.big-win .sill { position: absolute; right: 8%; bottom: 4px; z-index: 3; font-size: 24px; line-height: 1; }
+.big-win.deco-isik-rgb { animation: rgb 4s linear infinite; }
+@keyframes rgb { 0% { box-shadow: 0 0 34px #FF4D6D; } 33% { box-shadow: 0 0 34px #4DD8FF; } 66% { box-shadow: 0 0 34px #9D6BFF; } 100% { box-shadow: 0 0 34px #FF4D6D; } }
+.big-win.deco-isik-gece { background: linear-gradient(180deg, #FFB86B, #E07A2E); box-shadow: 0 0 46px rgba(255, 150, 60, .65); }
+.big-win.tiny { width: 66px; height: 80px; border-width: 3px; border-radius: 14px 14px 8px 8px; }
+.big-win.tiny::before { width: 2px; } .big-win.tiny::after { height: 2px; }
+.big-win.tiny .sil { width: 32px; height: 38px; font-size: 14px; border-radius: 16px 16px 6px 6px; }
+.big-win.tiny .pet, .big-win.tiny .sill { font-size: 14px; bottom: 2px; }
+
+/* Bakkal */
+.shop-hero { display: flex; gap: 16px; align-items: center; padding: 14px; border-radius: 18px; background: linear-gradient(180deg, var(--facade-2), var(--facade)); color: #F5F0FF; }
+.shop-hero .big-win { width: 92px; height: 112px; }
+.shop-hero .muted, .shop-hero .xs.muted { color: rgba(245, 240, 255, .7); }
+.tea-big { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: #FFC247; margin: 2px 0 4px; }
+.tea-big svg { width: 24px; height: 24px; }
+.reward .tea-big { justify-content: center; color: var(--lamp-text); }
+.shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.shop-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 10px; border-radius: 16px; background: var(--bg-3); border: 2px solid transparent; text-align: center; }
+.shop-item.on { border-color: var(--lamp); }
+.shop-item b { font-size: 13px; }
+.shop-item .btn { margin-top: auto; width: 100%; }
+.shop-prev { width: 56px; height: 56px; border-radius: 14px; background: var(--bg-2); display: grid; place-items: center; }
+.shop-prev .em { font-size: 30px; line-height: 1; }
+.shop-prev .em svg { width: 28px; height: 28px; }
+.shop-prev .sw { width: 34px; height: 40px; border-radius: 6px; }
+.sw.isik-rgb { background: linear-gradient(90deg, #FF4D6D, #4DD8FF, #9D6BFF); }
+.sw.isik-gece { background: radial-gradient(circle, #FFD08A, #E07A2E); border-radius: 50%; width: 34px; height: 34px; }
+
+/* Bildirimler */
+.notif { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; text-align: left; transition: background-color .15s; }
+.notif:hover { background: var(--bg-3); }
+.notif.new { background: var(--lamp-soft); }
+.notif-ic { width: 34px; height: 34px; border-radius: 11px; background: var(--bg-3); color: var(--lamp-text); display: grid; place-items: center; flex: none; }
+.reward { text-align: center; align-items: center; }
+.reward h3 { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: -.02em; max-width: 380px; }
+.reward .btn-row { width: 100%; }
+
+@media (max-width: 1000px) { .feed-leaders { display: block; } }
+@media (max-width: 640px) {
+  .today { grid-template-columns: 1fr; }
+  .today-tile + .today-tile { border-left: 0; border-top: 1px solid var(--line); }
+  .tea-chip { height: 32px; padding: 0 10px; }
+  .new-pill { top: 70px; }
+}
+@media (max-width: 400px) { .shop-grid { grid-template-columns: 1fr 1fr; } }
+
+html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+/* evdeyiz — prototip örnek verileri. Tüm kullanıcılar, gönderiler, hikâyeler ve lobiler kurgusaldır. */
+window.EV_DATA = {
+  cities: ["İstanbul", "Ankara", "İzmir", "Bursa", "Konya", "Gaziantep", "Diyarbakır", "Antalya", "Kayseri", "Eskişehir", "Samsun", "Trabzon", "Mersin", "Adana", "Diğer"],
+
+  since: [
+    { id: "yeni",  title: "Birkaç haftadır",        sub: "Yeni katıldım, ısınıyorum", base: 5 },
+    { id: "ay",    title: "3-6 aydır",              sub: "Kanepe şeklimi aldı", base: 120 },
+    { id: "yil",   title: "1 yıldan fazla",         sub: "Ev artık karargâh", base: 400 },
+    { id: "mezun", title: "Mezun olduğumdan beri",  sub: "Diploma duvarda, ben kanepede", base: 700 }
+  ],
+
+  wakes: [
+    { id: "erken",  title: "12'den önce",     sub: "Erkenci ev genciyim" },
+    { id: "ogle",   title: "12:00 - 14:00",   sub: "Kahvaltı mı öğle yemeği mi, brunch" },
+    { id: "ikindi", title: "14:00'ten sonra", sub: "Gün benim için ikindide başlar" },
+    { id: "yok",    title: "Uyumuyorum ki",   sub: "Gece kuşu, sabaha karşı yatarım" }
+  ],
+
+  games: [
+    { id: "lol",  name: "League of Legends", short: "LoL",  code: "LoL",  color: "#C89B3C", online: 3120 },
+    { id: "val",  name: "Valorant",          short: "Valorant", code: "VAL",  color: "#FF4655", online: 2480 },
+    { id: "cs",   name: "Counter-Strike 2",  short: "CS2",  code: "CS2",  color: "#DE9B35", online: 1960 },
+    { id: "fc",   name: "EA FC",             short: "EA FC", code: "FC",  color: "#12B76A", online: 1540 },
+    { id: "mc",   name: "Minecraft",         short: "Minecraft", code: "MC", color: "#5B8C32", online: 870 },
+    { id: "bs",   name: "Brawl Stars",       short: "Brawl Stars", code: "BS", color: "#F5B700", online: 1310 },
+    { id: "pubg", name: "PUBG Mobile",       short: "PUBG", code: "PUBG", color: "#E07A1F", online: 2210 },
+    { id: "dizi", name: "Dizi & film",       short: "Dizi", code: "TV",  color: "#7C5CFF", online: 4020 }
+  ],
+
+  titles: [
+    { min: 0,   name: "Çaylak Ev Genci" },
+    { min: 30,  name: "Kanepe Muhafızı" },
+    { min: 180, name: "Kıdemli Ev Genci" },
+    { min: 365, name: "Ev Genci Efsanesi" }
+  ],
+
+  people: {
+    kanepe_kral:    { name: "Kanepe Kralı",     badge: true,  bio: "Evde 412. gün. 3 teklif reddettim, sayaç devam." },
+    ogle_uyanan:    { name: "öğle uyanan",      badge: false, bio: "Alarmım yok, annem var." },
+    brunch_lordu:   { name: "Brunch Lordu",     badge: true,  bio: "Kahvaltı 14:30'da yapılır." },
+    tek_atan:       { name: "tek atan",         badge: false, bio: "Duo arıyorum, toksik değilim (bazen)." },
+    diplomali_evci: { name: "Diplomalı Evci",   badge: false, bio: "Diploma çerçevede, ben kanepede." },
+    bayram_kacagi:  { name: "bayram kaçağı",    badge: false, bio: "Akraba ziyaretlerinden kaçış uzmanı." },
+    gece_3te:       { name: "gece 3'te",        badge: true,  bio: "Balkonun gece müdavimi." },
+    "5k_ekonomisti":{ name: "5K Ekonomisti",    badge: true,  bio: "Ayda 5.000 ₺ ile yaşam rehberi." },
+    anket_kanka:    { name: "Apartman Yönetimi", badge: true, bio: "Toplantı her gün, katılım serbest." },
+    pro_clubs_tr:   { name: "Pro Clubs TR",     badge: false, bio: "Stoper ve kaleci arıyoruz." },
+    adc_bekir:      { name: "adc bekir",        badge: false, bio: "Gold II, toksik olmayan supp arıyor." }
+  },
+
+  feed: [
+    { id: "p1", h: "kanepe_kral", ago: "2 sa",
+      text: "30k teklif geldi. Yol günde 2 saat, yemek ayrı. Oturdum hesapladım, saati 99 lira ediyor. Evde ayda 5k ile krallar gibi yaşıyorum. Reddettim, pişman değilim. #30kyaHayır",
+      calc: { maas: 30000, saatlik: 99, evKal: true },
+      r: { reply: 214, repost: 512, like: 1243, views: 48200 } },
+    { id: "poll1", h: "anket_kanka", ago: "3 sa",
+      text: "Apartman toplantısı: 30k teklif gelse ne yaparsın? #30kyaHayır",
+      poll: { opts: ["Kabul, hemen başlarım", "Reddederim, evde 5k yeter", "Önce hesaplarım, sonra karar"], votes: [1840, 6720, 3410], left: "2 gün kaldı" },
+      r: { reply: 388, repost: 920, like: 2104, views: 96400 } },
+    { id: "p2", h: "ogle_uyanan", ago: "3 sa",
+      text: "Annem yine \"komşunun oğlu bankada\" dedi. Komşunun oğlu sabah 7'de servise biniyor anne, sen bunu mu istiyorsun benim için #komşununoğlu",
+      r: { reply: 401, repost: 1180, like: 2210, views: 71300 } },
+    { id: "p3", h: "brunch_lordu", ago: "4 sa",
+      text: "Bugün 14:30'da uyandım. Kahvaltı mı öğle yemeği mi bilemedim, kendime brunch dedim. Ev genciliğin sofistike hali. #brunch",
+      r: { reply: 96, repost: 230, like: 1520, views: 33800 } },
+    { id: "p4", h: "tek_atan", ago: "5 sa",
+      text: "Duo bulamadım tek attım, 0/9/1. Bugünlük bu kadar rekabet yeter, akşam tekrar. #lol",
+      r: { reply: 143, repost: 61, like: 640, views: 19700 } },
+    { id: "p5", h: "diplomali_evci", ago: "7 sa",
+      text: "Ya asgari ücretle diplomalı çalışan ya evde diplomalı işsiz. İkincisini seçtim, en azından uykum tamam, kafam rahat. #evgenci",
+      r: { reply: 622, repost: 1904, like: 3015, views: 128000 } },
+    { id: "p6", h: "bayram_kacagi", ago: "9 sa",
+      text: "Akraba ziyaretinden kaçmanın 3 yolu:\n1) \"online mülakatım var\"\n2) hasta numarası\n3) kulaklık tak, ekrana bak, başını salla #komşununoğlu",
+      r: { reply: 207, repost: 840, like: 990, views: 40500 } },
+    { id: "p7", h: "gece_3te", ago: "11 sa",
+      text: "Saat 03:12, Balkon odasında 640 kişi. Bu ülkede uyuyan kimse kalmadı galiba. #gecekuşları",
+      r: { reply: 188, repost: 302, like: 1780, views: 52100 } },
+    { id: "p8", h: "5k_ekonomisti", ago: "1 g",
+      text: "Aylık bütçem: internet 450, telefon 350, oyun içi 500, kahve-cips 1.500, gerisi harçlık. 5k'yı geçmiyor. Kira yok, fatura annemde. #5kileyaşam",
+      r: { reply: 534, repost: 1402, like: 2105, views: 88900 } }
+  ],
+
+  trends: [
+    { cat: "Türkiye gündeminde",  tag: "30kyaHayır",   count: "24,1B gönderi" },
+    { cat: "Ev hayatı · Gündemde", tag: "evgenci",      count: "58,3B gönderi" },
+    { cat: "Gündemde",             tag: "komşununoğlu", count: "9.204 gönderi" },
+    { cat: "Ekonomi · Gündemde",   tag: "5kileyaşam",   count: "12,7B gönderi" },
+    { cat: "Oyun · Gündemde",      tag: "lol",          count: "31,5B gönderi" },
+    { cat: "Gece · Gündemde",      tag: "gecekuşları",  count: "6.880 gönderi" },
+    { cat: "Yemek · Gündemde",     tag: "brunch",       count: "4.102 gönderi" }
+  ],
+
+  suggest: ["5k_ekonomisti", "gece_3te", "pro_clubs_tr"],
+
+  stories: [
+    { h: "kanepe_kral",   ago: "1 sa",  slides: [
+      { big: "412. gün", sub: "Kutlama menüsü: ikinci paket cips", g: ["#FF5A1F", "#F91880"] },
+      { big: "Bugünkü teklif: 28k", sub: "Cevap: hayır", g: ["#232526", "#5B5F66"] } ] },
+    { h: "brunch_lordu",  ago: "2 sa",  slides: [ { big: "14:40", sub: "Kahvaltı mı öğle mi, brunch", g: ["#F7971E", "#E8B500"] } ] },
+    { h: "gece_3te",      ago: "6 sa",  slides: [ { big: "03:12", sub: "Balkonda 640 kişi var", g: ["#0F2027", "#2C5364"] } ] },
+    { h: "tek_atan",      ago: "3 sa",  slides: [ { big: "0/9/1", sub: "Bugünlük bu kadar", g: ["#41295A", "#2F0743"] } ] },
+    { h: "5k_ekonomisti", ago: "5 sa",  slides: [
+      { big: "Ekim bütçesi", sub: "İnternet 450 · Telefon 350 · Oyun 500 · Cips 1.500", g: ["#0B8F7A", "#2BB673"] },
+      { big: "4.870 ₺", sub: "Toplam. Rekor düşük.", g: ["#0B8F7A", "#14532D"] } ] },
+    { h: "ogle_uyanan",   ago: "8 sa",  slides: [ { big: "\"Komşunun oğlu bankada\"", sub: "Bu hafta 4. kez", g: ["#7B2FF7", "#C2185B"] } ] },
+    { h: "pro_clubs_tr",  ago: "4 sa",  slides: [ { big: "Stoper aranıyor", sub: "Bu akşam 21:30 · Division 3", g: ["#14532D", "#0A0A0A"] } ] }
+  ],
+
+  lobbies: [
+    { id: "l1", game: "lol",  h: "adc_bekir",      rank: "Gold II",     role: "ADC",       note: "Toksik olmayan bir supp arıyorum, akşam 9'dan sonra", need: 1 },
+    { id: "l2", game: "val",  h: "duvar_arkasi",   rank: "Platin",      role: "5'li",      note: "2 kişi eksik, mikrofon şart, ağlamak yok", need: 2 },
+    { id: "l3", game: "cs",   h: "smoke_atan",     rank: "Faceit 6",    role: "Premier",   note: "Gece premier kasıyoruz, gel", need: 2 },
+    { id: "l4", game: "fc",   h: "pro_clubs_tr",   rank: "Division 3",  role: "Pro Clubs", note: "Stoper ve kaleci lazım, haftada 3 akşam", need: 2 },
+    { id: "l5", game: "mc",   h: "blok_ustasi",    rank: "Survival",    role: "Sunucu",    note: "Ev gençleri köyü kuruyoruz, herkes bir ev yapacak", need: 6 },
+    { id: "l6", game: "bs",   h: "kupa_avcisi",    rank: "35k kupa",    role: "3v3",       note: "Kupa kasıyoruz, 1 kişi lazım", need: 1 },
+    { id: "l7", game: "pubg", h: "chicken_dinner", rank: "Ace",         role: "Squad",     note: "Akşam squad, Türkçe konuşan", need: 1 },
+    { id: "l8", game: "dizi", h: "dizi_kurdu",     rank: "Watch party", role: "Grup",      note: "Cuma gecesi eş zamanlı izliyoruz, ne izleyelim?", need: 10 },
+    { id: "l9", game: "lol",  h: "jungle_yok",     rank: "Silver I",    role: "Flex 5'li", note: "Clash takımı kuruyoruz, jungle'cı aranıyor", need: 1 }
+  ],
+
+  tournament: { title: "Bodrum LAN Kupası", game: "League of Legends · 5v5", when: "Cuma 21:00", teams: 12, max: 16, prize: "Ödül: sponsor RP paketi ve kulübün ilk şampiyonu unvanı" },
+
+  rooms: [
+    { id: "genel", icon: "sofa",  title: "Salon",      sub: "Genel muhabbet, herkes burada",        color: "#FF6B4A", online: 1820 },
+    { id: "gece",  icon: "moon",  title: "Balkon",     sub: "Gece 3'te çay ve muhabbet",            color: "#6C7BFF", online: 640 },
+    { id: "aile",  icon: "door",  title: "Kapı önü",   sub: "Ailemle kavga ettim, dertleşelim",     color: "#E0559B", online: 410 },
+    { id: "red",   icon: "attic", title: "Çatı katı",  sub: "Teklif reddedenler kulübü",            color: "#2FBF8F", online: 290 },
+    { id: "para",  icon: "pot",   title: "Mutfak",     sub: "5k ile yaşam, ucuz tarifler",          color: "#F5A800", online: 350 },
+    { id: "lolr",  icon: "pad",   title: "Bodrum",     sub: "LoL, tilt, duo, gece maçları",         color: "#C89B3C", online: 920 },
+    { id: "dizi",  icon: "tv",    title: "Kanepe",     sub: "Dizi ve film, spoiler veren atılır",   color: "#9B6BFF", online: 530 }
+  ],
+
+  roomSeed: {
+    genel: [["kanepe_kral", "Selam kanepe ahalisi"], ["brunch_lordu", "Yeni uyandım, gündem ne"], ["gece_3te", "Gündem aynı kanka, kimse çalışmıyor"]],
+    gece:  [["gece_3te", "Saat kaç oldu bilen var mı"], ["uykusuz_umut", "Sabaha karşı 3, tam vaktinde"], ["tek_atan", "Bir maç daha atıp yatıyorum (yalan)"]],
+    aile:  [["ogle_uyanan", "Babam bugün \"bu evde otel mi işletiyoruz\" dedi"], ["diplomali_evci", "Klasik. Bizimki \"ben senin yaşında evliydim\" diyor"], ["sakin_kal", "Bir de \"bu ekranlar gözünü bozacak\" var"]],
+    red:   [["kanepe_kral", "Bugün bir teklifi daha reddettim, sayaç 3"], ["5k_ekonomisti", "Maaş kaç?"], ["kanepe_kral", "28k, yol 2 saat. Hesap aracında \"evde kal\" çıktı"]],
+    para:  [["5k_ekonomisti", "Oyun içi harcamayı 500'e indirdim, gurur duyun"], ["brunch_lordu", "Cips markası değiştirdim, ayda 200 tasarruf"], ["ogle_uyanan", "Dizi aboneliğini 4 kişi bölüşüyoruz"]],
+    lolr:  [["adc_bekir", "Bu yamada ADC oynanmıyor"], ["jungle_yok", "Her yamada öyle diyorsun"], ["tek_atan", "0/9/1 ile ben de katılıyorum"]],
+    dizi:  [["dizi_kurdu", "Cuma ne izliyoruz?"], ["gece_3te", "Korku olsun"], ["sakin_kal", "Korku izlersek gece kimse uyumaz, ha zaten uyumuyoruz"]]
+  },
+
+  replyHandles: ["kanepe_kral", "brunch_lordu", "gece_3te", "ogle_uyanan", "5k_ekonomisti", "tek_atan", "uykusuz_umut", "sakin_kal"],
+  replies: [
+    "Aynen kanka 😂", "Ben de tam olarak bu durumdayım", "Valla haklısın", "Efsane", "Yalnız değilsin, burada herkes öyle",
+    "Hahaha", "Benim annem de aynısını söylüyor", "Bu odaya bayılıyorum", "Kafana takma", "Akşam maç var mı?",
+    "Kanepe birliği", "Tamamen katılıyorum"
+  ],
+  quick: ["Selam 👋", "Ben de ev genciyim", "Yeni uyandım 🥱", "Duo?", "Haklısın kanka"],
+
+  colors: ["#FF5A1F", "#7C5CFF", "#0B8F7A", "#F91880", "#E8A400", "#1D9BF0", "#8E44AD", "#16A085", "#D35400", "#C2185B"],
+
+  /* ───── Bağlılık sistemleri ───── */
+  questions: [
+    { q: "Bugün kaçta uyandın?",              opts: ["12'den önce", "12-14 arası", "14'ten sonra", "Hâlâ uyumadım"], votes: [820, 2310, 1640, 905] },
+    { q: "Akşam ne yiyoruz?",                  opts: ["Makarna", "Annemin yemeği", "Tost", "Cips sayılır mı?"], votes: [1210, 2640, 980, 1530] },
+    { q: "Bugünkü ana mesai?",                 opts: ["LoL", "Dizi", "Telefonda kaydırma", "Hepsi biraz"], votes: [1480, 1120, 2050, 1730] },
+    { q: "Akrabalar gelse ne yaparsın?",       opts: ["Selam verip odaya kaçarım", "Uyuyor numarası", "Kulaklık takarım", "Oturur sohbet ederim"], votes: [3020, 1410, 1680, 540] },
+    { q: "En sevdiğin ev kıyafeti?",           opts: ["Eşofman", "Pijama", "Şort ve tişört", "Battaniye"], votes: [2210, 1870, 1320, 760] },
+    { q: "Hafta sonu senin için ne fark eder?", opts: ["Hiçbir şey", "Annem evde", "Turnuva var", "Daha geç yatarım"], votes: [2590, 1140, 830, 1490] },
+    { q: "Kapıcıdan en çok ne istersin?",      opts: ["Sıcak ekmek", "Kargom gelsin", "Sessizlik", "Wi-fi şifresi"], votes: [1980, 1350, 760, 2240] }
+  ],
+
+  kapici: [
+    "Kapıcı kapına sıcak ekmek ve {n} çay bıraktı.",
+    "Poşetten bir paket çekirdek ve {n} çay çıktı.",
+    "Kapıcı \"annen sordu, iyi misin?\" dedi. Yanında {n} çay var.",
+    "Poşette kargo yok ama {n} çay var. Yine de iyi.",
+    "Kapıcı: \"Balkonda ışığını gördüm, aferin.\" {n} çay bıraktı."
+  ],
+
+  shop: [
+    { id: "perde-turuncu", cat: "perde",  name: "Turuncu perde",    price: 15, color: "#FF6B4A" },
+    { id: "perde-mor",     cat: "perde",  name: "Mor perde",        price: 15, color: "#8E6BFF" },
+    { id: "perde-ekose",   cat: "perde",  name: "Ekoseli perde",    price: 25, color: "repeating-linear-gradient(45deg,#C0392B 0 6px,#2C3E50 6px 12px)" },
+    { id: "saksi-feslegen",cat: "saksi",  name: "Fesleğen saksısı", price: 10, emoji: "🌿" },
+    { id: "saksi-sardunya",cat: "saksi",  name: "Sardunya",         price: 20, emoji: "🌺" },
+    { id: "saksi-kaktus",  cat: "saksi",  name: "Kaktüs",           price: 12, emoji: "🌵" },
+    { id: "evcil-kedi",    cat: "evcil",  name: "Pencere kedisi",   price: 40, emoji: "🐈" },
+    { id: "evcil-kus",     cat: "evcil",  name: "Muhabbet kuşu",    price: 30, emoji: "🐦" },
+    { id: "isik-rgb",      cat: "isik",   name: "RGB ışık şeridi",  price: 35 },
+    { id: "isik-gece",     cat: "isik",   name: "Gece lambası",     price: 15 },
+    { id: "ampul",         cat: "ampul",  name: "Yedek ampul",      price: 30, desc: "Bir gün ışık yakmayı unutursan serin korunur." }
+  ],
+  shopCats: { perde: "Perde", saksi: "Saksı", evcil: "Evcil", isik: "Işık", ampul: "Yedek" },
+
+  incoming: [
+    { id: "n1", h: "uykusuz_umut", ago: "şimdi", text: "Az önce annem kapıyı çaldı, \"yemek hazır\" dedi. Saat 16:20. Benim için kahvaltı. #brunch", r: { reply: 3, repost: 1, like: 18, views: 240 } },
+    { id: "n2", h: "sakin_kal", ago: "1 dk", text: "Bugün 3 iş ilanına baktım, hiçbirine başvurmadım ama baktım. Küçük adımlar. #evgenci", r: { reply: 9, repost: 4, like: 61, views: 830 } }
+  ],
+
+  leaders: [
+    { label: "En geç uyanan",        h: "brunch_lordu",   value: "14:40" },
+    { label: "En çok \"ben de\" alan", h: "diplomali_evci", value: "3.015" },
+    { label: "En uzun ışık serisi",  h: "kanepe_kral",    value: "41 gün" }
+  ],
+
+  badges: [
+    { id: "yoklama1", label: "İlk ışık",        desc: "Pencerendeki ışığı ilk kez yaktın" },
+    { id: "yoklama3", label: "3 gece seri",     desc: "3 gün üst üste ışığın yandı" },
+    { id: "ogleci",   label: "Öğlenci",         desc: "12'den sonra uyananlar kulübü" },
+    { id: "gece",     label: "Balkon sakini",   desc: "Gece Balkon odasına yazdın" },
+    { id: "itiraf",   label: "İtirafçı",        desc: "İlk gönderini paylaştın" },
+    { id: "duo",      label: "Duo partner",     desc: "Bir lobiye katıldın" },
+    { id: "red",      label: "Teklif reddeden", desc: "Hesap aracı \"evde kal\" dedi" },
+    { id: "muhabbet", label: "Muhabbetçi",      desc: "Odalara 3 mesaj yazdın" },
+    { id: "bakkal",   label: "Bakkal müdavimi", desc: "Bakkaldan ilk eşyanı aldın" },
+    { id: "yeni",     label: "Yerleşik sakin",  desc: "Taşınma listesini bitirdin" }
+  ]
+};
+
+</script>
+<script>
+/* evdeyiz — ev gençlerinin apartmanı. Tek sayfalık prototip; veri tarayıcıda (localStorage) tutulur, sunucu yok. */
+(() => {
+  "use strict";
+  const D = window.EV_DATA;
+  const KEY = "evdeyiz.v2";
+  const $app = document.getElementById("app");
+  const $toast = document.getElementById("toast");
+
+  /* ───────── Storage ───────── */
+  const store = {
+    load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } },
+    save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* özel mod vb. */ } },
+    clear() { try { localStorage.removeItem(KEY); } catch { /* yok say */ } }
+  };
+  const fresh = () => ({
+    user: null, checkins: [], posts: [], likes: {}, reposts: {}, polls: {}, follows: {}, seen: {},
+    lobbies: [], myLobbies: [], rooms: {}, unread: 0,
+    calc: { maas: 30000, yol: 2500, yemek: 3500, isSaat: 9, yolSaat: 2, ev: 5000 }, calcUsed: false,
+    tea: 0, teaTotal: 0, inv: [], eq: {}, bulbs: 1, box: null, qa: {}, notifs: [], extra: false, listDone: false,
+    tab: "feed", feedTab: "foryou", theme: null
+  });
+  let S = Object.assign(fresh(), store.load() || {});
+  const save = () => store.save(S);
+
+  const blankOnb = () => ({ step: 0, data: { name: "", since: "", games: [], wake: "ogle", city: "" } });
+  const ui = {
+    view: S.user ? "app" : "landing", onb: blankOnb(),
+    room: null, game: "all", hashtag: null, search: "", allTrends: false,
+    modal: null, shareText: "", confirmReset: false, shopCat: "perde", rewardText: "", rewardTea: 0,
+    story: null, ptab: "posts", typing: null, anon: false, pill: false
+  };
+
+  /* ───────── Helpers ───────── */
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const today = () => ymd();
+  const MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  const hash = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+  const pick = (arr, seed) => arr[seed % arr.length];
+  const nf = (n) => Math.round(n).toLocaleString("tr-TR");
+  const k = (n) => n >= 1e6 ? `${(n / 1e6).toLocaleString("tr-TR", { maximumFractionDigits: 1 })} Mn` : n >= 1e4 ? `${(n / 1e3).toLocaleString("tr-TR", { maximumFractionDigits: 1 })}B` : nf(n);
+  const lower = (s) => String(s).toLocaleLowerCase("tr");
+  const colorOf = (h) => pick(D.colors, hash(h));
+  const person = (h) => D.people[h] || { name: h.replace(/_/g, " "), badge: false };
+  const daire = (h) => hash(h) % 98 + 1;
+  const liveCount = () => 41000 + (hash(today()) % 9000) + new Date().getHours() * 137;
+  const ago = (ms) => { const m = Math.floor((Date.now() - ms) / 60000); if (m < 1) return "şimdi"; if (m < 60) return `${m} dk`; const h = Math.floor(m / 60); return h < 24 ? `${h} sa` : `${Math.floor(h / 24)} g`; };
+  const initial = (s) => esc(String(s || "?")[0].toLocaleUpperCase("tr"));
+  const dayNo = () => Math.floor(new Date(today() + "T00:00:00").getTime() / 86400000);
+
+  function toast(msg) {
+    $toast.textContent = msg;
+    $toast.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => $toast.classList.remove("show"), 2800);
+  }
+  function applyTheme() { if (S.theme) document.documentElement.dataset.theme = S.theme; else delete document.documentElement.dataset.theme; }
+
+  function daysAtHome(u = S.user) {
+    if (!u) return 0;
+    const base = (D.since.find((s) => s.id === u.since) || D.since[0]).base;
+    const extra = Math.max(0, Math.round((new Date(today() + "T00:00:00") - new Date(u.joinedAt + "T00:00:00")) / 86400000));
+    return base + extra;
+  }
+  const titleFor = (d) => D.titles.filter((t) => d >= t.min).pop();
+  function streak() {
+    const set = new Set(S.checkins); let d = new Date();
+    if (!set.has(ymd(d))) d = addDays(d, -1);
+    let n = 0; while (set.has(ymd(d))) { n++; d = addDays(d, -1); }
+    return n;
+  }
+  const handleOf = (name) => lower(String(name || "ev_genci").trim().replace(/\s+/g, "_")).replace(/[^\p{L}\p{N}_]/gu, "") || "ev_genci";
+  const myHandle = () => handleOf(S.user?.name);
+  const cardNo = (u) => { const h = handleOf(u.name); return `EG-${pad(daire(h))}-${String(hash(u.joinedAt + h) % 10000000).padStart(7, "0")}`; };
+
+  /* Çay: uygulamanın para birimi */
+  function earn(n) { S.tea += n; S.teaTotal += n; save(); }
+  function notify(text, icon = "bell", go = null) {
+    S.notifs.unshift({ id: "nt" + Date.now() + Math.random().toString(36).slice(2, 6), text, icon, go, at: Date.now(), read: false });
+    if (S.notifs.length > 40) S.notifs = S.notifs.slice(0, 40);
+    save();
+  }
+  const unreadNotifs = () => S.notifs.filter((n) => !n.read).length;
+
+  function calcResult(c = S.calc) {
+    const netKalan = c.maas - c.yol - c.yemek;
+    const saat = 22 * (Number(c.isSaat) + Number(c.yolSaat));
+    const saatlik = saat > 0 ? netKalan / saat : 0;
+    return { netKalan, saat, saatlik, birikim: netKalan - c.ev, evKal: saatlik < 120 };
+  }
+  const roomMine = () => Object.values(S.rooms).flat().filter((m) => m.me).length;
+  function checklist() {
+    return [
+      { id: "light", label: "Pencerendeki ışığı yak", done: S.checkins.length > 0, go: "light" },
+      { id: "note", label: "Panoya ilk notunu as", done: S.posts.length > 0, go: "compose" },
+      { id: "room", label: "Bir odaya selam ver", done: roomMine() > 0, go: "rooms" },
+      { id: "shop", label: "Bakkaldan pencerene bir şey al", done: S.inv.length > 0, go: "shop" }
+    ];
+  }
+  function earned() {
+    return {
+      yoklama1: S.checkins.length > 0, yoklama3: streak() >= 3,
+      ogleci: ["ogle", "ikindi"].includes(S.user?.wake),
+      gece: (S.rooms.gece || []).some((m) => m.me) || S.user?.wake === "yok",
+      itiraf: S.posts.length > 0, duo: S.lobbies.length > 0,
+      red: S.calcUsed && calcResult().evKal, muhabbet: roomMine() >= 3,
+      bakkal: S.inv.length > 0, yeni: !!S.listDone
+    };
+  }
+
+  /* ───────── Icons ───────── */
+  const P = {
+    board: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h6M7 13h10M7 17h4"/>',
+    pad: '<path d="M6 11h4M8 9v4"/><path d="M15 12h.01M18 10h.01"/><path d="M17.3 5H6.7a4 4 0 0 0-4 3.6l-.9 8.1A2.5 2.5 0 0 0 4.3 19.5c.9 0 1.7-.5 2.1-1.3L8 15h8l1.6 3.2c.4.8 1.2 1.3 2.1 1.3a2.5 2.5 0 0 0 2.5-2.8l-.9-8.1a4 4 0 0 0-4-3.6z"/>',
+    door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="14.5" cy="12" r="1" fill="currentColor"/>',
+    receipt: '<path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5-2 1.5-2.5-1.5L5 21z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    window: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 11h16"/>',
+    sofa: '<path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M3 13a2 2 0 0 1 4 0v1.5h10V13a2 2 0 0 1 4 0v5H3z"/><path d="M6 18v2M18 18v2"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+    attic: '<path d="M2 20 12 4l10 16z"/><path d="M10 13h4v4h-4z"/>',
+    pot: '<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h20M9 6c0-1 1-2 3-2s3 1 3 2"/>',
+    tv: '<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    hand: '<path d="M18 11V6a2 2 0 0 0-4 0v1M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
+    comment: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    pin: '<path d="M12 17v5"/><path d="M9 10.8a2 2 0 0 1-1.1 1.8l-1.8.9A2 2 0 0 0 5 15.2v.8h14v-.8a2 2 0 0 0-1.1-1.8l-1.8-.9a2 2 0 0 1-1.1-1.8V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    share: '<path d="M12 3v13M7 8l5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    back: '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+    next: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+    send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    map: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    vote: '<path d="M9 12l2 2 4-4"/><path d="M5 7h14v13H5z"/><path d="M8 4h8v3H8z"/>',
+    tea: '<path d="M8 3h8l-1.2 6.5c-.3 1.8.7 3 1 5 .4 3.2-1.6 6.5-3.8 6.5s-4.2-3.3-3.8-6.5c.3-2 1.3-3.2 1-5z"/><path d="M6 21h12"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+    bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/>',
+    store: '<path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M9 20v-6h6v6"/>',
+    bulb: '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
+    trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+    gear: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+    arrowUp: '<path d="M12 19V5M5 12l7-7 7 7"/>'
+  };
+  const ic = (n, cls = "ico", sw = 2) => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+  const star = () => `<svg class="star" viewBox="0 0 24 24" aria-label="Kıdemli sakin"><path fill="currentColor" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>`;
+  const av = (h, cls = "") => `<span class="av ${cls}" style="background:${colorOf(h)}" aria-hidden="true">${initial(h)}</span>`;
+  const meAv = (cls = "") => `<span class="av ${cls}" style="background:var(--tomato)" aria-hidden="true">${initial(S.user?.name)}</span>`;
+  const brand = () => `<span class="brand"><span class="mark" aria-hidden="true"><i></i><i class="on"></i><i></i><i></i></span>evdeyiz</span>`;
+  const linkify = (t) => String(t).split(/(#[\p{L}\p{N}_]+)/u).map((part) => part.startsWith("#") && part.length > 1
+    ? `<button class="hashtag" data-a="hashtag" data-v="${esc(part.slice(1))}">${esc(part)}</button>`
+    : esc(part)).join("");
+  const win = (on, extra = "") => `<span class="w ${on ? "on" : ""} ${extra}" aria-hidden="true"></span>`;
+  const item = (id) => D.shop.find((x) => x.id === id);
+
+  /* Süslü pencere: bakkaldan alınan eşyalar burada görünür */
+  function windowArt(eq = S.eq, name = S.user?.name, cls = "") {
+    const perde = eq.perde && item(eq.perde), saksi = eq.saksi && item(eq.saksi), evcil = eq.evcil && item(eq.evcil);
+    const isik = eq.isik || "";
+    return `<span class="big-win ${cls} ${isik ? "deco-" + isik : ""}" aria-hidden="true">
+      ${perde ? `<i class="curtain l" style="background:${perde.color}"></i><i class="curtain r" style="background:${perde.color}"></i>` : ""}
+      <span class="sil">${initial(name)}</span>
+      ${evcil ? `<span class="pet">${evcil.emoji}</span>` : ""}
+      ${saksi ? `<span class="sill">${saksi.emoji}</span>` : ""}
+    </span>`;
+  }
+
+  /* Apartman cephesi */
+  function facade(cols, rows, { showMe = false, caption = true } = {}) {
+    const total = cols * rows;
+    const meIdx = S.user ? daire(myHandle()) % total : -1;
+    const meOn = showMe && S.checkins.includes(today());
+    let seed = hash(today() + cols) || 1;
+    const rand = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const cells = Array.from({ length: total }, (_, i) => {
+      const r = rand();
+      if (i === meIdx && meOn) return win(true, "me");
+      return win(r < 0.6, r > 0.92 ? "tw" : "");
+    }).join("");
+    return `<div class="facade">
+      <div class="facade-roof"></div>
+      <div class="facade-grid" style="--cols:${cols}">${cells}</div>
+      <div class="facade-door"></div>
+      ${caption ? `<div class="facade-cap"><div class="row" style="gap:8px"><span class="live-dot"></span><span class="xs" style="color:rgba(245,240,255,.7)">Şu an evde</span></div><div class="facade-num">${nf(liveCount())}</div><p>pencerede ışık yanıyor${meOn ? ". Biri de senin." : ". Seninki de yansın."}</p></div>` : ""}
+    </div>`;
+  }
+
+  /* ───────── Landing ───────── */
+  function landing() {
+    const roomIc = (r) => `<span class="room-ic" style="background:${r.color}">${ic(r.icon)}</span>`;
+    const rs = (id) => D.rooms.find((r) => r.id === id);
+    return `
+    <div class="landing">
+      <header class="land-top">${brand()}<button class="btn sm ghost" data-a="start">Kulübe katıl</button></header>
+      <main class="land-hero">
+        <div class="land-copy">
+          <span class="eyebrow">Türkiye'nin ev gençleri apartmanı</span>
+          <h1>Ben de ev genciyim. <em>Sen de.</em></h1>
+          <p class="lead">Burada kimse "iş buldun mu?" diye sormaz. Panoya not bırak, gece balkonda muhabbet et, pencereni süsle, 30k teklifin fişini kes.</p>
+          <div class="land-cta">
+            <button class="btn lamp lg" data-a="start">Işığını yak</button>
+            <span class="land-live"><span class="live-dot"></span><span><b>${nf(liveCount())}</b> pencerede ışık yanıyor</span></span>
+          </div>
+        </div>
+        <div class="land-art">
+          ${facade(7, 7, { caption: false })}
+          <div class="float-note n1"><div class="row" style="gap:10px">${av("kanepe_kral", "s32")}<div><b class="sm">Kanepe Kralı</b><div class="xs muted">Daire ${daire("kanepe_kral")} · 2 sa</div></div></div><p class="sm" style="margin-top:8px">30k teklif geldi, saati 99 lira. Reddettim.</p><span class="bende on">${ic("hand", "ico-sm")}Ben de <span class="cnt">1,2B</span></span></div>
+          <div class="float-note n2"><div class="row" style="gap:10px"><span class="room-ic" style="background:${rs("gece").color};width:32px;height:32px;border-radius:10px">${ic("moon", "ico-sm")}</span><div><b class="sm">Balkon</b><div class="xs muted">Gece 3'te çay ve muhabbet</div></div></div><p class="sm" style="margin-top:8px"><span class="online"><span class="live-dot"></span>640 kişi şu an burada</span></p></div>
+        </div>
+      </main>
+      <section class="floors-strip">
+        <div class="card floor">${roomIc({ color: "#FF6B4A", icon: "bag" })}<div><h3>Her gün kapına poşet</h3><p>Kapıcı her gün bir şey bırakır. Işığını yak, serini koru, çay topla.</p></div></div>
+        <div class="card floor">${roomIc(rs("gece"))}<div><h3>Odalar ve pano</h3><p>Salon, Balkon, Bodrum. Yaz, "ben de" de, yalnız olmadığını gör.</p></div></div>
+        <div class="card floor">${roomIc({ color: "#2FBF8F", icon: "store" })}<div><h3>Bakkal ve pencerem</h3><p>Çaylarınla perde, sardunya, kedi al. Pencereni bütün apartman görsün.</p></div></div>
+      </section>
+      <footer class="land-foot"><span>Apartman kuralları</span><span>Gizlilik</span><span>© 2026 evdeyiz · prototip, tüm içerik örnektir</span></footer>
+    </div>`;
+  }
+
+  /* ───────── Onboarding: 4 adım ───────── */
+  const ONB = 4;
+  function onboarding() {
+    const { step, data } = ui.onb;
+    let body = "", can = true, next = "Devam", skip = "";
+    if (step === 0) {
+      can = data.name.trim().length > 1;
+      body = `<h2>Kapına ne yazalım?</h2><p class="hint">Takma ad yeter. Apartmanda bu adla görüneceksin.</p>
+        <div class="field"><label for="onb-name">Takma ad</label><div class="input"><input id="onb-name" maxlength="18" autocomplete="nickname" placeholder="ör. kanepe_kral" value="${esc(data.name)}" /></div></div>`;
+    } else if (step === 1) {
+      can = !!data.since;
+      body = `<h2>Ne zamandır evdesin?</h2><p class="hint">Apartmandaki kıdemin buna göre belirlenir.</p><div>${D.since.map((s) => `
+        <button class="choice" data-a="onb-pick" data-k="since" data-v="${s.id}" aria-pressed="${data.since === s.id}">${win(data.since === s.id)}<span><b>${esc(s.title)}</b><span class="sub">${esc(s.sub)}</span></span></button>`).join("")}</div>`;
+    } else if (step === 2) {
+      next = "Anahtarımı ver";
+      can = data.games.length > 0;
+      skip = can ? "" : `<button class="btn ghost block" data-a="onb-skip">Oyun oynamıyorum, geç</button>`;
+      body = `<h2>Ana mesain ne?</h2><p class="hint">Oyun odasında sana uygun lobileri gösteririz. Birden fazla seçebilirsin.</p>
+        <div class="game-grid">${D.games.map((g) => `<button class="game-pick" data-a="onb-game" data-v="${g.id}" aria-pressed="${data.games.includes(g.id)}"><span class="gcode" style="background:${g.color}">${g.code}</span><span class="grow">${esc(g.short)}</span>${data.games.includes(g.id) ? `<span style="color:var(--lamp-text)">${ic("check", "ico-sm", 3)}</span>` : ""}</button>`).join("")}</div>`;
+    } else {
+      next = "Daireme gir";
+      body = `<h2>Daire ${daire(handleOf(data.name))} senin.</h2><p class="hint">Sakin kartın hazır. Hoş geldin hediyesi olarak kapında 10 çay var.</p>${sakinCard({ ...data, joinedAt: today() }, {})}`;
+    }
+    return `
+    <div class="ov onb" role="dialog" aria-modal="true" aria-label="Kayıt">
+      <div class="sheet">
+        <div class="onb-top"><button class="icon-btn" data-a="onb-back" aria-label="${step ? "Geri" : "Kapat"}">${ic(step ? "back" : "x")}</button>${brand()}<span class="sm faint" style="width:40px;text-align:right">${step + 1}/${ONB}</span></div>
+        <div class="onb-body">${body}</div>
+        <div class="onb-foot">
+          <div class="floors" aria-hidden="true">${Array.from({ length: ONB }, (_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>
+          <button class="btn lamp lg block" data-a="onb-next" ${can ? "" : "disabled"}>${next}</button>
+          ${skip}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function sakinCard(u, eq = S.eq) {
+    const days = daysAtHome(u);
+    const wake = D.wakes.find((w) => w.id === u.wake);
+    const games = (u.games || []).map((g) => D.games.find((x) => x.id === g)?.short).filter(Boolean);
+    const h = handleOf(u.name);
+    return `
+    <section class="sakin" aria-label="Sakin kartı">
+      <div class="sakin-top"><span>EV GENCİ SAKİN KARTI</span><span>DAİRE ${daire(h)}</span></div>
+      <div class="sakin-body">
+        ${windowArt(eq, u.name)}
+        <div class="grow">
+          <div class="sakin-name">@${esc(h)}</div>
+          <div class="sakin-title">${esc(titleFor(days).name)}</div>
+          <dl>
+            <div><dt>Evde</dt><dd>${nf(days)}. gün</dd></div>
+            <div><dt>Işık yanar</dt><dd>${esc(wake?.title || "-")}</dd></div>
+            <div><dt>Ana mesai</dt><dd>${esc(games.slice(0, 2).join(", ") || "Dizi, uyku")}</dd></div>
+            <div><dt>Şehir</dt><dd>${esc(u.city || "Gizli")}</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="sakin-foot"><span>No ${cardNo(u)}</span><span>evdeyiz apt. · süresiz</span></div>
+    </section>`;
+  }
+
+  /* ───────── Shell ───────── */
+  const TABS = [["feed", "Pano", "board"], ["party", "Oyun", "pad"], ["rooms", "Odalar", "door"], ["calc", "Fiş", "receipt"], ["me", "Dairem", "window"]];
+  function shell() {
+    const pages = { feed: pageFeed, party: pageParty, rooms: pageRooms, calc: pageCalc, me: pageMe };
+    const un = unreadNotifs();
+    return `
+    <div class="app ${S.tab === "rooms" && ui.room ? "in-room" : ""}">
+      <header class="top"><div class="top-inner">
+        <button data-a="tab" data-v="feed" aria-label="Panoya dön">${brand()}</button>
+        <label class="search">${ic("search", "ico-sm")}<input id="search" type="search" placeholder="Panoda ara" value="${esc(ui.search)}" autocomplete="off" aria-label="Panoda ara" /></label>
+        <div class="top-actions">
+          <button class="btn lamp sm desk" data-a="compose">${ic("plus", "ico-sm", 2.6)}Not bırak</button>
+          <button class="tea-chip" data-a="modal" data-v="shop" aria-label="${S.tea} çay, bakkalı aç">${ic("tea", "ico-sm")}<span class="num">${S.tea}</span></button>
+          <button class="icon-btn bell" data-a="modal" data-v="notifs" aria-label="Bildirimler${un ? `, ${un} yeni` : ""}">${ic("bell")}${un ? `<span class="dot-badge">${un > 9 ? "9+" : un}</span>` : ""}</button>
+          <button data-a="tab" data-v="me" aria-label="Dairem">${meAv("s32")}</button>
+        </div>
+      </div></header>
+      <div class="wrap">
+        <main class="main">${pages[S.tab]()}</main>
+        <aside class="aside" aria-label="Apartman">${side()}</aside>
+      </div>
+      <nav class="dock" aria-label="Ana menü">
+        ${TABS.map(([id, label, icon]) => `<button data-a="tab" data-v="${id}" ${S.tab === id ? 'aria-current="page"' : ""}>${ic(icon)}${label}${id === "rooms" && S.unread && S.tab !== "rooms" ? `<span class="badge">${S.unread}</span>` : ""}</button>`).join("")}
+      </nav>
+    </div>
+    ${modal()}${storyViewer()}`;
+  }
+
+  function side() {
+    const trends = ui.allTrends ? D.trends : D.trends.slice(0, 5);
+    return `
+      ${facade(8, 6, { showMe: true })}
+      ${leadersCard()}
+      <section class="card">
+        <h2 class="list-title">Panoda en çok konuşulan</h2>
+        ${trends.map((t, i) => `<button class="list-row" data-a="hashtag" data-v="${esc(t.tag)}"><span class="trend-rank">${i + 1}</span><span class="grow"><span class="b" style="display:block">#${esc(t.tag)}</span><span class="xs muted">${esc(t.count)}</span></span></button>`).join("")}
+        <button class="list-more" data-a="more-trends">${ui.allTrends ? "Daha az göster" : "Tümünü göster"}</button>
+      </section>
+      <section class="card" style="padding-bottom:8px">
+        <h2 class="list-title">Yeni komşular</h2>
+        ${D.suggest.map((h) => { const p = person(h); const on = !!S.follows[h]; return `<div class="list-row">${av(h)}<div class="grow"><div class="b ellip">${esc(p.name)}${p.badge ? star() : ""}</div><div class="xs muted">Daire ${daire(h)}</div></div><button class="btn sm ${on ? "on" : ""}" data-a="follow" data-v="${h}">${on ? "Komşusun" : "Kapıyı çal"}</button></div>`; }).join("")}
+      </section>
+      <div class="side-foot"><span>Apartman kuralları</span><span>Gizlilik</span><span>© 2026 evdeyiz</span></div>`;
+  }
+
+  function leadersCard(extraCls = "") {
+    const st = streak();
+    return `<section class="card leaders ${extraCls}">
+      <h2 class="list-title">${ic("trophy", "ico-sm")}Haftanın en'leri</h2>
+      ${D.leaders.map((l) => `<div class="list-row">${av(l.h, "s32")}<div class="grow"><div class="xs muted">${esc(l.label)}</div><div class="b ellip">${esc(person(l.h).name)}</div></div><b class="num">${esc(l.value)}</b></div>`).join("")}
+      <div class="leader-me">${st ? `Senin serin <b>${st} gün</b>. ${Math.max(0, 41 - st)} gün daha yakarsan zirvedesin.` : "Bugün ışığını yak, sıralamaya gir."}</div>
+    </section>`;
+  }
+
+  /* ───────── Pano ───────── */
+  function allPosts() {
+    const mine = S.posts.slice().reverse().map((p) => ({ ...p, mine: true }));
+    let list = mine.concat(S.extra ? D.incoming : [], D.feed);
+    if (S.feedTab === "popular") list = list.slice().sort((a, b) => (b.r?.like || 0) - (a.r?.like || 0));
+    if (ui.hashtag) list = list.filter((p) => lower(p.text).includes("#" + lower(ui.hashtag)));
+    if (ui.search.trim()) { const q = lower(ui.search.trim()); list = list.filter((p) => lower(p.text).includes(q) || lower(p.h || "").includes(q) || lower(person(p.h || "").name).includes(q)); }
+    return list;
+  }
+  function pageFeed() {
+    const posts = allPosts();
+    const filter = ui.hashtag || ui.search.trim();
+    const notes = posts.map(noteHtml);
+    if (!filter && notes.length > 2) notes.splice(2, 0, leadersCard("feed-leaders"));
+    return `
+      ${ui.pill && !filter ? `<button class="new-pill" data-a="show-new">${ic("arrowUp", "ico-sm", 2.6)}2 yeni not</button>` : ""}
+      <div class="page-head">
+        <div><h1>Apartman panosu</h1><p>Bugün ${nf(liveCount())} pencerede ışık yanıyor.</p></div>
+        <div class="seg" role="group" aria-label="Sıralama"><button data-a="feedtab" data-v="foryou" aria-pressed="${S.feedTab === "foryou"}">Yeni</button><button data-a="feedtab" data-v="popular" aria-pressed="${S.feedTab === "popular"}">En çok "ben de"</button></div>
+      </div>
+      ${filter ? `<div class="filter-bar"><span><span class="muted">Panoda:</span> <b>${ui.hashtag ? "#" + esc(ui.hashtag) : `"${esc(ui.search.trim())}"`}</b> · ${posts.length} not</span><button class="btn sm ghost" data-a="clear-filter">Temizle</button></div>` : `${windowsRow()}${todayCard()}${checklistCard()}${questionCard()}`}
+      ${composer("inline")}
+      ${notes.length ? notes.join("") : `<div class="card empty"><span class="win"></span><h2>Panoda bu konuda not yok</h2><p>İlk notu sen bırak. Apartman dinliyor.</p></div>`}
+      <p class="faint xs" style="text-align:center">Prototip · notlar ve sakinler örnektir</p>`;
+  }
+
+  function windowsRow() {
+    const order = D.stories.map((s, i) => ({ s, i })).sort((a, b) => (!!S.seen[a.s.h]) - (!!S.seen[b.s.h]));
+    return `<div class="windows" aria-label="Pencereler">
+      <button class="win-btn" data-a="modal" data-v="shop" aria-label="Pencereni süsle">${windowArt(S.eq, S.user.name, "tiny")}<span class="win-name">Pencerem</span></button>
+      ${order.map(({ s, i }) => `<button class="win-btn" data-a="story" data-v="${i}" aria-label="${esc(s.h)} penceresi"><span class="win ${S.seen[s.h] ? "" : "lit"}"><span class="who">${initial(s.h)}</span></span><span class="win-name">${esc(s.h)}</span></button>`).join("")}
+    </div>`;
+  }
+
+  /* Bugün kartı: ışık + kapıcı poşeti */
+  function todayCard() {
+    const lit = S.checkins.includes(today());
+    const boxed = S.box === today();
+    const week = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i - 6));
+    const st = streak();
+    const nextMs = [3, 7, 14, 30].find((m) => m > st);
+    const bonus = { 3: 10, 7: 25, 14: 40, 30: 80 }[nextMs];
+    return `<section class="card today">
+      <div class="today-tile ${lit ? "done" : "hot"}">
+        <div class="light-week" aria-hidden="true">${week.map((d) => `<i class="${S.checkins.includes(ymd(d)) ? "on" : ""}"></i>`).join("")}</div>
+        <div class="grow"><h3>${lit ? `${st} gündür ışığın yanıyor` : st ? `${st} günlük serin sönmesin` : "Işığını yak"}</h3>
+          <p class="sm muted">${lit ? (nextMs ? `${nextMs - st} gün sonra +${bonus} çay ödül` : "Efsane seri. Bırakma.") : "+5 çay · yarın yine gel"}${S.bulbs ? ` · ${S.bulbs} yedek ampul` : ""}</p></div>
+        ${lit ? `<span class="pill-done">${ic("check", "ico-sm", 3)}Yandı</span>` : `<button class="btn lamp sm" data-a="checkin">Işığımı yak</button>`}
+      </div>
+      <div class="today-tile ${boxed ? "done" : "hot"}">
+        <span class="bag ${boxed ? "" : "wiggle"}">${ic("bag")}</span>
+        <div class="grow"><h3>${boxed ? "Poşet açıldı" : "Kapında poşet var"}</h3><p class="sm muted">${boxed ? "Yarın kapıcı yine uğrar." : "Kapıcı bugün bir şey bıraktı. Ne çıkacak?"}</p></div>
+        ${boxed ? `<span class="pill-done">${ic("check", "ico-sm", 3)}Alındı</span>` : `<button class="btn lamp sm" data-a="box">Poşeti aç</button>`}
+      </div>
+    </section>`;
+  }
+
+  function checklistCard() {
+    if (S.listDone) return "";
+    const items = checklist();
+    const done = items.filter((x) => x.done).length;
+    const all = done === items.length;
+    return `<section class="card checklist">
+      <div class="row" style="justify-content:space-between"><h3>Taşınma listesi</h3><span class="sm muted num">${done}/${items.length}</span></div>
+      <div class="meter"><i style="width:${(done / items.length) * 100}%"></i></div>
+      ${items.map((x) => `<button class="check-row ${x.done ? "done" : ""}" data-a="go" data-v="${x.go}" ${x.done ? "disabled" : ""}><span class="tick">${x.done ? ic("check", "ico-sm", 3) : ""}</span><span class="grow">${esc(x.label)}</span>${x.done ? "" : ic("next", "ico-sm")}</button>`).join("")}
+      ${all ? `<button class="btn lamp block" data-a="list-claim">${ic("tea", "ico-sm")}20 çay ödülünü al</button>` : `<p class="xs muted">Hepsini bitir, 20 çay ve "Yerleşik sakin" rozeti senin.</p>`}
+    </section>`;
+  }
+
+  function questionCard() {
+    const q = D.questions[dayNo() % D.questions.length];
+    const ans = S.qa[today()];
+    const votes = q.votes.map((v, i) => v + (ans === i ? 1 : 0));
+    const total = votes.reduce((a, b) => a + b, 0);
+    const max = Math.max(...votes);
+    return `<section class="card pad meeting-card">
+      <div class="meeting-title">${ic("vote", "ico-sm")}Günün apartman toplantısı · ${nf(total)} oy</div>
+      <h3 class="q">${esc(q.q)}</h3>
+      <div class="meeting flat">
+        ${ans === undefined
+          ? q.opts.map((o, i) => `<button class="opt" data-a="answer" data-v="${i}"><span>${esc(o)}</span></button>`).join("") + `<p class="xs muted">Oy ver, sonuçları gör · +2 çay</p>`
+          : q.opts.map((o, i) => { const pct = Math.round((votes[i] / total) * 100); return `<div class="opt ${votes[i] === max ? "win-opt" : ""}"><i class="bar" style="width:${pct}%"></i><span>${esc(o)}${ans === i ? ic("check", "ico-sm", 3) : ""}</span><span class="pct">%${pct}</span></div>`; }).join("") + `<p class="xs muted">Yarın yeni toplantı var.</p>`}
+      </div>
+    </section>`;
+  }
+
+  function composer(where) {
+    return `<form class="card composer" data-form="post" data-where="${where}">
+      ${ui.anon ? `<span class="av anon">${ic("lock", "ico-sm")}</span>` : meAv()}
+      <div class="grow">
+        <textarea id="pt-${where}" rows="2" maxlength="280" placeholder="Panoya bir not bırak…" aria-label="Not"></textarea>
+        <div class="composer-foot">
+          <button type="button" class="toggle" data-a="anon" aria-pressed="${ui.anon}"><span class="switch"></span>İsimsiz as</button>
+          <div class="row" style="gap:12px"><span class="counter" id="cnt-${where}">0/280</span><button class="btn lamp sm" type="submit">Panoya as</button></div>
+        </div>
+      </div>
+    </form>`;
+  }
+
+  function noteHtml(p) {
+    const r = p.r || { reply: 0, repost: 0, like: 0, views: 0 };
+    const liked = !!S.likes[p.id], rep = !!S.reposts[p.id];
+    let h, name, badge = false, avatar, no;
+    if (p.mine) {
+      if (p.anon) { h = "isimsiz"; name = "İsimsiz komşu"; avatar = `<span class="av anon">${ic("lock", "ico-sm")}</span>`; no = "?"; }
+      else { h = myHandle(); name = S.user.name; avatar = meAv(); no = daire(h); }
+    } else { h = p.h; const pp = person(h); name = pp.name; badge = pp.badge; avatar = av(h); no = daire(h); }
+    const fresh = D.incoming.some((x) => x.id === p.id);
+    return `
+    <article class="card note ${fresh ? "fresh" : ""}" aria-label="${esc(name)} notu">
+      ${rep ? `<div class="shared-by">${ic("pin", "ico-sm")}Panoya tekrar astın</div>` : ""}
+      <div class="note-head">${avatar}<div class="grow"><div class="note-name"><span>${esc(name)}</span>${badge ? star() : ""}</div><div class="note-meta"><span class="daire">D.${no}</span><span>${esc(p.mine ? ago(p.at) : p.ago)}</span></div></div></div>
+      <div class="note-text">${linkify(p.text)}</div>
+      ${p.poll ? meetingHtml(p) : ""}
+      ${p.calc ? `<button class="embed" data-a="tab" data-v="calc">${receipt(p.calc, true)}</button><div class="embed-cap">${ic("receipt", "ico-sm")}Kendi fişini kes</div>` : ""}
+      <div class="note-foot">
+        <button class="bende ${liked ? "on" : ""}" data-a="like" data-v="${p.id}" aria-pressed="${liked}">${ic("hand", "ico-sm")}Ben de <span class="cnt">${k(r.like + (liked ? 1 : 0))}</span></button>
+        <button class="mini" data-a="reply" aria-label="Yorumlar">${ic("comment", "ico-sm")}${r.reply ? k(r.reply) : ""}</button>
+        <button class="mini ${rep ? "on" : ""}" data-a="repost" data-v="${p.id}" aria-pressed="${rep}" aria-label="Panoya tekrar as">${ic("pin", "ico-sm")}${k(r.repost + (rep ? 1 : 0))}</button>
+        <button class="mini" data-a="share-post" data-v="${p.id}" aria-label="Paylaş">${ic("share", "ico-sm")}</button>
+        <span class="seen" aria-label="Görüntülenme">${ic("eye", "ico-sm")}${k(r.views)}</span>
+      </div>
+    </article>`;
+  }
+
+  function meetingHtml(p) {
+    const voted = S.polls[p.id];
+    const votes = p.poll.votes.map((v, i) => v + (voted === i ? 1 : 0));
+    const total = votes.reduce((a, b) => a + b, 0);
+    const head = `<div class="meeting-title">${ic("vote", "ico-sm")}Apartman toplantısı · ${nf(total)} oy · ${esc(p.poll.left)}</div>`;
+    if (voted === undefined) return `<div class="meeting">${head}${p.poll.opts.map((o, i) => `<button class="opt" data-a="vote" data-id="${p.id}" data-v="${i}"><span>${esc(o)}</span></button>`).join("")}</div>`;
+    const max = Math.max(...votes);
+    return `<div class="meeting">${head}${p.poll.opts.map((o, i) => { const pct = Math.round((votes[i] / total) * 100); return `<div class="opt ${votes[i] === max ? "win-opt" : ""}"><i class="bar" style="width:${pct}%"></i><span>${esc(o)}${voted === i ? ic("check", "ico-sm", 3) : ""}</span><span class="pct">%${pct}</span></div>`; }).join("")}</div>`;
+  }
+
+  function receipt(c, mini = false) {
+    const full = !mini && c.netKalan !== undefined;
+    const no = String(hash(String(c.maas) + (c.saatlik || 0)) % 9000 + 1000);
+    const d = new Date();
+    return `<div class="receipt ${mini ? "mini-r" : ""}">
+      <div class="receipt-head"><b>MAAŞ MI, EV Mİ?</b><span>Fiş ${no} · ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}</span></div>
+      <div class="r-line"><span>Teklif (net)</span><span>${nf(c.maas)} ₺</span></div>
+      ${full ? `
+        <div class="r-line minus"><span>Yol</span><span>−${nf(c.yol)} ₺</span></div>
+        <div class="r-line minus"><span>Yemek</span><span>−${nf(c.yemek)} ₺</span></div>
+        <div class="r-sep"></div>
+        <div class="r-line"><span>Eline kalan</span><span>${nf(c.netKalan)} ₺</span></div>
+        <div class="r-line"><span>Mesai + yol</span><span>${nf(c.saat)} sa/ay</span></div>
+        <div class="r-line"><span>Evde kalınca masraf</span><span>${nf(c.ev)} ₺</span></div>` : ""}
+      <div class="r-sep"></div>
+      <div class="r-total"><span>Saatin</span><b>${nf(c.saatlik)} ₺</b></div>
+      <span class="stamp ${c.evKal ? "" : "go"}">${c.evKal ? "EVDE KAL" : "BİR DÜŞÜN"}</span>
+      <div class="r-foot">KANEPE KAÇMAZ · evdeyiz</div>
+    </div>`;
+  }
+
+  /* ───────── Pencere görüntüleyici ───────── */
+  const STORY_MS = 5000;
+  let storyTick = null;
+  function storyViewer() {
+    if (!ui.story) return "";
+    const st = D.stories[ui.story.i];
+    const sl = st.slides[ui.story.s];
+    return `<div class="story-ov" role="dialog" aria-modal="true" aria-label="${esc(st.h)} penceresi">
+      <button class="icon-btn story-close" data-a="story-close" aria-label="Kapat">${ic("x")}</button>
+      <div class="story-frame" style="background:linear-gradient(165deg, ${sl.g[0]}, ${sl.g[1]})">
+        <div class="story-bars">${st.slides.map((_, i) => `<i><b ${i === ui.story.s ? 'id="sb-cur"' : ""} style="width:${i < ui.story.s ? 100 : 0}%"></b></i>`).join("")}</div>
+        <div class="story-head">${av(st.h, "s32")}<b>${esc(st.h)}</b><span class="daire" style="background:rgba(0,0,0,.25);color:#fff">D.${daire(st.h)}</span><span style="opacity:.75">${esc(st.ago)}</span></div>
+        <div class="story-content"><div class="story-big">${esc(sl.big)}</div><div class="story-sub">${esc(sl.sub)}</div></div>
+        <button class="story-tap prev" data-a="story-prev" aria-label="Önceki"></button>
+        <button class="story-tap next" data-a="story-next" aria-label="Sonraki"></button>
+        <form class="story-reply" data-form="story-reply"><input id="story-reply" placeholder="Pencereye seslen…" autocomplete="off" aria-label="Yanıt" /><button class="icon-btn" type="submit" aria-label="Gönder">${ic("send")}</button></form>
+      </div>
+    </div>`;
+  }
+  function openStory(i) { ui.story = { i, s: 0, start: Date.now(), paused: false }; S.seen[D.stories[i].h] = true; save(); render(); runStory(); }
+  function runStory() {
+    clearInterval(storyTick);
+    storyTick = setInterval(() => {
+      if (!ui.story) { clearInterval(storyTick); return; }
+      if (ui.story.paused) return;
+      const pct = Math.min(100, ((Date.now() - ui.story.start) / STORY_MS) * 100);
+      const b = document.getElementById("sb-cur"); if (b) b.style.width = pct + "%";
+      if (pct >= 100) storyStep(1);
+    }, 50);
+  }
+  function storyStep(dir) {
+    const st = D.stories[ui.story.i];
+    let { i, s } = ui.story;
+    s += dir;
+    if (s >= st.slides.length) { i++; s = 0; }
+    if (s < 0) { i--; s = i >= 0 ? D.stories[i].slides.length - 1 : 0; }
+    if (i < 0) { i = 0; s = 0; }
+    if (i >= D.stories.length) { closeStory(); return; }
+    ui.story = { i, s, start: Date.now(), paused: false };
+    S.seen[D.stories[i].h] = true; save();
+    render();
+  }
+  function closeStory() { clearInterval(storyTick); ui.story = null; render(); }
+
+  /* ───────── Oyun odası ───────── */
+  function pageParty() {
+    const mine = S.user.games || [];
+    const all = S.myLobbies.slice().reverse().map((l) => ({ ...l, mine: true })).concat(D.lobbies);
+    const list = all.filter((l) => ui.game === "all" || (ui.game === "mine" ? mine.includes(l.game) : l.game === ui.game));
+    const t = D.tournament, inT = S.lobbies.includes("tournament");
+    const teams = t.teams + (inT ? 1 : 0);
+    const online = D.games.reduce((a, g) => a + g.online, 0);
+    return `
+      <div class="page-head"><div><h1>Oyun odası</h1><p>${nf(online)} komşu şu an oyunda.</p></div><button class="btn lamp sm" data-a="modal" data-v="lobby">${ic("plus", "ico-sm", 2.6)}İlan as</button></div>
+      <div class="games" role="group" aria-label="Oyun filtresi">
+        <button class="chip txt" data-a="game" data-v="all" aria-pressed="${ui.game === "all"}">Hepsi</button>
+        ${mine.length ? `<button class="chip txt" data-a="game" data-v="mine" aria-pressed="${ui.game === "mine"}">Benim oyunlarım</button>` : ""}
+        ${D.games.map((g) => `<button class="chip" data-a="game" data-v="${g.id}" aria-pressed="${ui.game === g.id}"><span class="gcode" style="background:${g.color}">${g.code}</span>${esc(g.short)}</button>`).join("")}
+      </div>
+      <section class="card lan">
+        <div class="lan-art"><span class="lan-tag"><span class="live-dot"></span>Kayıtlar açık · ${t.max - teams} yer kaldı</span><h3>${esc(t.title)}</h3><p>${esc(t.game)} · ${esc(t.when)}</p></div>
+        <div class="pad" style="display:flex;flex-direction:column;gap:12px">
+          <div class="slots" aria-label="${teams}/${t.max} takım kayıtlı">${Array.from({ length: t.max }, (_, i) => `<i class="${i < t.teams ? "on" : i === t.teams && inT ? "me" : ""}"></i>`).join("")}</div>
+          <div class="row" style="justify-content:space-between;flex-wrap:wrap"><span class="sm"><b class="num">${teams}/${t.max}</b> <span class="muted">takım · ${esc(t.prize)}</span></span><button class="btn sm ${inT ? "on" : "lamp"}" data-a="lobby" data-v="tournament">${inT ? "Takımın kayıtlı" : "Takım kaydet"}</button></div>
+        </div>
+      </section>
+      ${list.length ? list.map(lobbyHtml).join("") : `<div class="card empty"><span class="win"></span><h2>Bu oyunda lobi yok</h2><p>İlk ilanı sen as, duo'n seni bulsun.</p></div>`}`;
+  }
+  function lobbyHtml(l) {
+    const g = D.games.find((x) => x.id === l.game) || D.games[0];
+    const joined = S.lobbies.includes(l.id);
+    const h = l.mine ? myHandle() : l.h;
+    const name = l.mine ? S.user.name : person(h).name;
+    return `<article class="card lobby">
+      <span class="gcode lg" style="background:${g.color}" aria-label="${esc(g.name)}">${g.code}</span>
+      <div class="grow">
+        <div class="note-name"><span>${esc(name)}</span><span class="daire">D.${daire(h)}</span></div>
+        <p style="margin-top:4px">${esc(l.note)}</p>
+        <div class="tags"><span class="tag">${esc(g.short)}</span><span class="tag">${esc(l.rank)}</span><span class="tag">${esc(l.role)}</span>${l.mine ? '<span class="tag mine">Senin ilanın</span>' : `<span class="tag hot">${l.need} kişi lazım</span>`}</div>
+      </div>
+      ${l.mine ? `<button class="btn sm ghost" data-a="lobby-del" data-v="${l.id}">Kaldır</button>` : `<button class="btn sm ${joined ? "on" : ""}" data-a="lobby" data-v="${l.id}">${joined ? "Lobidesin" : "Katıl"}</button>`}
+    </article>`;
+  }
+
+  /* ───────── Odalar ───────── */
+  const roomMsgs = (id) => (D.roomSeed[id] || []).map(([h, text]) => ({ h, text })).concat(S.rooms[id] || []);
+  function pageRooms() {
+    if (ui.room) return roomThread();
+    return `
+      <div class="page-head"><div><h1>Odalar</h1><p>Apartmanın ortak alanları. Kimse yargılamaz. Her mesaj +1 çay.</p></div></div>
+      <div class="rooms">${D.rooms.map((r) => {
+        const last = roomMsgs(r.id).slice(-1)[0];
+        return `<button class="card room" data-a="room" data-v="${r.id}">
+          <div class="row" style="justify-content:space-between"><span class="room-ic" style="background:${r.color}">${ic(r.icon)}</span><span class="online"><span class="live-dot"></span>${k(r.online)}</span></div>
+          <div><h3>${esc(r.title)}</h3><div class="sub">${esc(r.sub)}</div></div>
+          <div class="last ellip">${last ? `${last.me ? "Sen" : "@" + esc(last.h)}: ${esc(last.text)}` : ""}</div>
+        </button>`;
+      }).join("")}</div>
+      <p class="faint xs">Kural: yargılamak, aşağılamak ve "git iş bul" nasihati yasak. Gerçekten kötü hissediyorsan yalnız kalma; acil durumda 112.</p>`;
+  }
+  function roomThread() {
+    const r = D.rooms.find((x) => x.id === ui.room);
+    const groups = [];
+    for (const m of roomMsgs(r.id)) {
+      const key = m.me ? "__me" : m.h;
+      const g = groups[groups.length - 1];
+      if (g && g.key === key) g.items.push(m); else groups.push({ key, items: [m] });
+    }
+    return `
+      <div class="thread-head"><button class="icon-btn" data-a="room-back" aria-label="Odalara dön">${ic("back")}</button><span class="room-ic" style="background:${r.color}">${ic(r.icon)}</span><div class="grow"><h1>${esc(r.title)}</h1><span class="online"><span class="live-dot"></span>${nf(r.online + 1)} kişi burada</span></div></div>
+      <section class="card thread" id="thread">
+        <p class="sm muted" style="text-align:center">${esc(r.sub)}. Odaya hoş geldin.</p>
+        ${groups.map((g) => g.key === "__me"
+          ? `<div class="bgroup me"><div class="bubbles">${g.items.map((m) => `<div class="bubble">${esc(m.text)}</div>`).join("")}</div></div>`
+          : `<div class="bgroup">${av(g.key, "s32")}<div class="bubbles"><div class="bname">@${esc(g.key)} · D.${daire(g.key)}</div>${g.items.map((m) => `<div class="bubble">${esc(m.text)}</div>`).join("")}</div></div>`).join("")}
+        ${ui.typing ? `<div class="typing"><i></i><i></i><i></i>&nbsp;@${esc(ui.typing)} yazıyor</div>` : ""}
+      </section>
+      <div class="card composer-dock">
+        <div class="quick">${D.quick.map((q) => `<button data-a="quick" data-v="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+        <form class="msg-form" data-form="chat"><input id="chat-input" maxlength="240" placeholder="${esc(r.title)} odasına yaz" autocomplete="off" aria-label="Mesaj" /><button class="send" type="submit" aria-label="Gönder">${ic("send")}</button></form>
+      </div>`;
+  }
+
+  /* ───────── Fiş ───────── */
+  const calcView = () => ({ ...S.calc, ...calcResult() });
+  function pageCalc() {
+    const c = S.calc;
+    const f = (id, label, val, unit, step) => `<div class="field"><label for="c-${id}">${label}</label><div class="input has-unit"><input id="c-${id}" data-calc="${id}" type="number" inputmode="decimal" min="0" step="${step}" value="${val}" /><span class="unit">${unit}</span></div></div>`;
+    return `
+      <div class="page-head"><div><h1>Maaş mı, ev mi?</h1><p>Teklifi gir, fişini kes. Saatine gerçekte kaç para düşüyor?</p></div></div>
+      <div class="calc">
+        <section class="card pad fields">
+          ${f("maas", "Teklif edilen net maaş", c.maas, "₺", 500)}
+          <div class="grid2">${f("yol", "Aylık yol", c.yol, "₺", 100)}${f("yemek", "Aylık yemek", c.yemek, "₺", 100)}</div>
+          <div class="grid2">${f("isSaat", "Günlük mesai", c.isSaat, "saat", 1)}${f("yolSaat", "Günlük yol süresi", c.yolSaat, "saat", 0.5)}</div>
+          ${f("ev", "Evdeyken aylık toplam masrafın", c.ev, "₺", 250)}
+          <p class="note-s">Ayda 22 iş günü varsayılır. Saati 120 ₺'nin altındaysa fişe "EVDE KAL" damgası basılır. Eğlencesine bir hesap, finansal tavsiye değildir.</p>
+        </section>
+        <div class="calc-side">
+          <div id="calc-out">${receipt(calcView())}</div>
+          <div class="btn-row"><button class="btn lamp" data-a="calc-post">${ic("pin", "ico-sm")}Panoya as</button><button class="btn ghost" data-a="calc-copy">Metni kopyala</button></div>
+        </div>
+      </div>`;
+  }
+
+  /* ───────── Dairem ───────── */
+  function pageMe() {
+    const u = S.user, days = daysAtHome(), t = titleFor(days), e = earned();
+    const wake = D.wakes.find((w) => w.id === u.wake);
+    const joined = new Date(u.joinedAt + "T00:00:00");
+    const myPosts = S.posts.slice().reverse().map((p) => ({ ...p, mine: true }));
+    const neighbors = Object.values(S.follows).filter(Boolean).length;
+    let content = "";
+    if (ui.ptab === "posts") {
+      content = myPosts.length ? myPosts.map(noteHtml).join("") : `<div class="card empty"><span class="win"></span><h2>Panoda notun yok</h2><p>İlk notunu as, kaç komşunun "ben de" dediğini gör. +3 çay.</p><button class="btn lamp" data-a="compose">İlk notunu yaz</button></div>`;
+    } else if (ui.ptab === "card") {
+      content = `${sakinCard(u)}<div class="btn-row" style="max-width:520px"><button class="btn lamp" data-a="id-copy">Sakin kartını kopyala</button></div>`;
+    } else {
+      content = `<div class="badges">${D.badges.map((b) => `<div class="card badge"><span class="win ${e[b.id] ? "lit" : ""}"></span><b>${esc(b.label)}</b><span>${esc(b.desc)}</span></div>`).join("")}</div>
+        <section class="card ladder"><h2 class="list-title">Kıdem yolu</h2>${D.titles.map((x) => `<div class="step">${win(days >= x.min)}<div class="grow"><div class="b">${esc(x.name)}</div><div class="xs muted">${x.min}. günden itibaren</div></div><span class="sm ${days >= x.min ? "" : "muted"}">${days >= x.min ? "Açıldı" : `${x.min - days} gün kaldı`}</span></div>`).join("")}</section>`;
+    }
+    return `
+      <section class="card home-hero">
+        <div class="home-art">${windowArt()}<div class="plate"><small>DAİRE</small><b>${daire(myHandle())} · ${esc(u.name)}</b></div></div>
+        <div class="home-body">
+          <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:wrap"><div><h2>${esc(u.name)}${days >= 365 ? star() : ""}</h2><div class="muted">@${esc(myHandle())}</div></div><div class="row" style="gap:8px"><button class="btn sm lamp" data-a="modal" data-v="shop">${ic("store", "ico-sm")}Pencereni süsle</button><button class="btn sm ghost" data-a="modal" data-v="settings" aria-label="Ayarlar">${ic("gear", "ico-sm")}</button></div></div>
+          <span class="title-chip">${win(true)}${esc(t.name)}</span>
+          <div class="meta-row">${u.city ? `<span>${ic("map", "ico-sm")}${esc(u.city)}</span>` : ""}<span>${ic("clock", "ico-sm")}Işık ${esc(wake?.title || "-")}</span><span>${ic("cal", "ico-sm")}${MONTHS[joined.getMonth()]} ${joined.getFullYear()}'de taşındı</span></div>
+          <div class="stats"><div class="stat"><b>${nf(days)}</b><span>Evdeki gün</span></div><div class="stat"><b>${streak()}</b><span>Işık serisi</span></div><div class="stat"><b>${S.tea}</b><span>Çay</span></div><div class="stat"><b>${neighbors}</b><span>Komşu</span></div></div>
+        </div>
+      </section>
+      <div class="seg" role="group" aria-label="Daire sekmeleri" style="align-self:flex-start">${[["posts", "Notlarım"], ["card", "Sakin kartı"], ["badges", "Rozetler"]].map(([id, l]) => `<button data-a="ptab" data-v="${id}" aria-pressed="${ui.ptab === id}">${l}</button>`).join("")}</div>
+      ${content}`;
+  }
+
+  /* ───────── Modals ───────── */
+  function shopBody() {
+    const cats = Object.keys(D.shopCats);
+    const list = D.shop.filter((x) => x.cat === ui.shopCat);
+    return `<div class="sheet-body">
+      <div class="shop-hero">${windowArt()}<div class="grow"><div class="sm muted">Cebinde</div><div class="tea-big">${ic("tea")}<span class="num">${S.tea}</span> çay</div><p class="xs muted">Işık yak +5 · poşet aç · toplantıya katıl +2 · not as +3 · odada yaz +1</p></div></div>
+      <div class="games" role="group" aria-label="Bakkal reyonları">${cats.map((c) => `<button class="chip txt" data-a="shop-cat" data-v="${c}" aria-pressed="${ui.shopCat === c}">${esc(D.shopCats[c])}</button>`).join("")}</div>
+      <div class="shop-grid">${list.map((x) => {
+        const owned = S.inv.includes(x.id), on = S.eq[x.cat] === x.id, canBuy = S.tea >= x.price;
+        const preview = x.cat === "perde" ? `<span class="sw" style="background:${x.color}"></span>` : x.emoji ? `<span class="em">${x.emoji}</span>` : x.cat === "isik" ? `<span class="sw ${x.id}"></span>` : `<span class="em" style="color:var(--lamp-text)">${ic("bulb")}</span>`;
+        let btn;
+        const buyBtn = `<button class="btn sm ${canBuy ? "lamp" : ""}" data-a="buy" data-v="${x.id}" ${canBuy ? "" : "disabled"} aria-label="${esc(x.name)} al, ${x.price} çay">${ic("tea", "ico-sm")}${x.price}</button>`;
+        if (x.cat === "ampul") btn = buyBtn;
+        else if (on) btn = `<button class="btn sm on" data-a="unequip" data-v="${x.id}" aria-label="${esc(x.name)} takılı, çıkarmak için dokun">Takılı</button>`;
+        else if (owned) btn = `<button class="btn sm ghost" data-a="equip" data-v="${x.id}">Tak</button>`;
+        else btn = buyBtn;
+        return `<div class="shop-item ${on ? "on" : ""}"><div class="shop-prev">${preview}</div><b>${esc(x.name)}</b>${x.cat === "ampul" ? `<span class="xs muted">${esc(x.desc)} Elinde: ${S.bulbs}</span>` : `<span class="xs muted">${owned ? "Senin" : `${x.price} çay`}</span>`}${btn}</div>`;
+      }).join("")}</div>
+      ${S.tea < 10 ? `<p class="xs muted" style="text-align:center">Çayın az mı? Bugün ışığını yak ve kapıdaki poşeti aç.</p>` : ""}
+    </div>`;
+  }
+
+  function notifsBody() {
+    if (!S.notifs.length) return `<div class="sheet-body"><div class="empty"><span class="win"></span><h2>Henüz bildirim yok</h2><p>Panoya not as, komşular tepki verince burada görürsün.</p></div></div>`;
+    return `<div class="sheet-body" style="gap:4px">${S.notifs.map((n) => `<button class="notif ${n.read ? "" : "new"}" data-a="notif-go" data-v="${n.id}"><span class="notif-ic">${ic(n.icon, "ico-sm")}</span><span class="grow">${esc(n.text)}<span class="xs muted" style="display:block">${ago(n.at)}</span></span></button>`).join("")}</div>`;
+  }
+
+  function modal() {
+    if (!ui.modal) return "";
+    let title = "", body = "";
+    if (ui.modal === "compose") {
+      title = "Panoya not bırak";
+      body = `<div class="sheet-body">${composer("modal")}</div>`;
+    } else if (ui.modal === "lobby") {
+      title = "Oyun odasına ilan as";
+      const mine = S.user.games || [];
+      body = `<form class="sheet-body" data-form="lobby">
+        <div class="field"><label for="lob-game">Oyun</label><div class="input"><select id="lob-game">${D.games.map((g) => `<option value="${g.id}" ${g.id === mine[0] ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select></div></div>
+        <div class="field"><label for="lob-rank">Rank veya mod</label><div class="input"><input id="lob-rank" maxlength="20" placeholder="ör. Gold II" /></div></div>
+        <div class="field"><label for="lob-note">Ne arıyorsun?</label><div class="input"><textarea id="lob-note" rows="3" maxlength="120" placeholder="ör. Toksik olmayan supp, gece 11'den sonra"></textarea></div></div>
+        <button class="btn lamp lg block" type="submit">İlanı as</button>
+      </form>`;
+    } else if (ui.modal === "shop") {
+      title = "Köşedeki bakkal";
+      body = shopBody();
+    } else if (ui.modal === "notifs") {
+      title = "Bildirimler";
+      body = notifsBody();
+    } else if (ui.modal === "settings") {
+      title = "Daire ayarları";
+      body = `<div class="sheet-body">
+        <form class="fields" data-form="profile">
+          <div class="field"><label for="set-name">Kapıdaki isim</label><div class="input"><input id="set-name" maxlength="18" value="${esc(S.user.name)}" /></div></div>
+          <div class="grid2">
+            <div class="field"><label for="set-wake">Kaçta uyanırsın?</label><div class="input"><select id="set-wake">${D.wakes.map((w) => `<option value="${w.id}" ${w.id === S.user.wake ? "selected" : ""}>${esc(w.title)}</option>`).join("")}</select></div></div>
+            <div class="field"><label for="set-city">Şehir</label><div class="input"><select id="set-city"><option value="">Gizli</option>${D.cities.map((c) => `<option ${c === S.user.city ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></div></div>
+          </div>
+          <button class="btn lamp" type="submit">Kaydet</button>
+        </form>
+        <div class="field"><span class="sm muted">Görünüm</span><div class="theme-seg">${[[null, "Sistem"], ["dark", "Gece"], ["light", "Gündüz"]].map(([v, l]) => `<button data-a="theme" data-v="${v}" aria-pressed="${S.theme === v}">${l}</button>`).join("")}</div></div>
+        <div class="danger">
+          <div><b>Daireyi boşalt</b><p class="sm muted">Sakin kartın, notların, çayın ve ışık geçmişin bu tarayıcıdan silinir. Geri alınamaz.</p></div>
+          ${ui.confirmReset ? `<div class="btn-row"><button class="btn ghost" data-a="reset-cancel">Vazgeç</button><button class="btn red" data-a="reset">Evet, boşalt</button></div>` : `<button class="btn red-ghost" data-a="reset-ask">Daireyi boşalt</button>`}
+        </div>
+      </div>`;
+    } else if (ui.modal === "reward") {
+      title = "Kapıcının poşeti";
+      body = `<div class="sheet-body reward"><span class="bag big">${ic("bag")}</span><h3>${esc(ui.rewardText)}</h3><div class="tea-big">${ic("tea")}<span class="num">+${ui.rewardTea}</span> çay</div><p class="sm muted">Cebinde ${S.tea} çay var. Bakkala uğra, pencereni süsle.</p><div class="btn-row"><button class="btn ghost" data-a="modal-close">Sonra</button><button class="btn lamp" data-a="modal" data-v="shop">Bakkala git</button></div></div>`;
+    } else if (ui.modal === "share") {
+      title = "Kopyala ve paylaş";
+      body = `<div class="sheet-body"><p class="sm muted">Otomatik kopyalama burada çalışmadı. Metni seçip kopyalayabilirsin.</p><textarea class="share-text" id="share-text" readonly>${esc(ui.shareText)}</textarea></div>`;
+    }
+    return `<div class="ov" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="sheet"><div class="sheet-head"><h2>${esc(title)}</h2><button class="icon-btn" data-a="modal-close" aria-label="Kapat">${ic("x")}</button></div>${body}</div>
+    </div>`;
+  }
+
+  /* ───────── Render ───────── */
+  function render() {
+    applyTheme();
+    const keep = {};
+    document.querySelectorAll("#app textarea[id], #app input[id]:not([type=number])").forEach((el) => { keep[el.id] = el.value; });
+    const act = document.activeElement;
+    const focusId = act && act.id && $app.contains(act) ? act.id : null;
+    const sel = focusId && typeof act.selectionStart === "number" ? [act.selectionStart, act.selectionEnd] : null;
+
+    $app.innerHTML = ui.view === "landing" ? landing() : ui.view === "onb" ? landing() + onboarding() : shell();
+
+    for (const [id, v] of Object.entries(keep)) { const el = document.getElementById(id); if (el && !el.readOnly && el.value === "" && v) { el.value = v; updateCounter(el); } }
+    if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); if (sel) try { el.setSelectionRange(sel[0], sel[1]); } catch { /* tür desteklemiyor */ } } }
+    document.body.style.overflow = ui.modal || ui.story || ui.view === "onb" ? "hidden" : "";
+  }
+  const top = () => window.scrollTo(0, 0);
+  const bottomScroll = () => requestAnimationFrame(() => window.scrollTo(0, document.body.scrollHeight));
+  function updateCounter(el) {
+    if (!el.id.startsWith("pt-")) return;
+    const c = document.getElementById("cnt-" + el.id.slice(3));
+    if (c) c.textContent = `${el.value.length}/280`;
+  }
+  function copyText(text, okMsg = "Kopyalandı") {
+    const fallback = () => { ui.shareText = text; ui.modal = "share"; render(); setTimeout(() => document.getElementById("share-text")?.select(), 30); };
+    try { navigator.clipboard.writeText(text).then(() => toast(okMsg), fallback); } catch { fallback(); }
+  }
+
+  /* "2 yeni not" düğmesi: panoda bir süre kalınca belirir */
+  let pillTimer = null;
+  function armPill() {
+    clearTimeout(pillTimer);
+    if (S.extra || !S.user) return;
+    pillTimer = setTimeout(() => { if (!S.extra && ui.view === "app") { ui.pill = true; if (S.tab === "feed" && !ui.modal && !ui.story) render(); } }, 18000);
+  }
+
+  /* Not asıldıktan sonra komşular tepki verir */
+  function afterPost(id, kind = "not") {
+    setTimeout(() => {
+      const p = S.posts.find((x) => x.id === id); if (!p) return;
+      p.r = { reply: hash(id) % 4, repost: hash(p.text) % 6, like: 4 + (hash(p.text + id) % 30), views: 60 + (hash(id + "v") % 400) };
+      notify(`${p.r.like} komşu ${kind === "fiş" ? "fişine" : "notuna"} "ben de" dedi.`, "hand", { tab: "feed" });
+      save(); if (ui.view === "app" && !ui.modal && !ui.story) render();
+    }, 2500);
+  }
+
+  /* ───────── Actions ───────── */
+  function finishOnb() {
+    const d = ui.onb.data;
+    S.user = { name: d.name.trim(), since: d.since, games: d.games.slice(), wake: d.wake, city: d.city, joinedAt: today() };
+    S.tab = "feed";
+    earn(10);
+    notify("Kapıcı kapına bugünün poşetini bıraktı.", "bag", { tab: "feed" });
+    notify("Apartman yönetimi: Hoş geldin komşu. Kapına 10 çay bıraktık.", "tea", { modal: "shop" });
+    save();
+    ui.view = "app"; render(); top(); armPill();
+    toast("Hoş geldin komşu. Önce ışığını yak.");
+  }
+  const A = {
+    start() { ui.view = "onb"; ui.onb = blankOnb(); render(); setTimeout(() => document.getElementById("onb-name")?.focus(), 30); },
+    "onb-back"() { if (ui.onb.step === 0) ui.view = "landing"; else ui.onb.step--; render(); },
+    "onb-next"() { if (ui.onb.step < ONB - 1) { ui.onb.step++; render(); } else finishOnb(); },
+    "onb-skip"() { ui.onb.data.games = []; ui.onb.step = ONB - 1; render(); },
+    "onb-pick"(el) { ui.onb.data[el.dataset.k] = el.dataset.v; render(); },
+    "onb-game"(el) { const l = ui.onb.data.games, i = l.indexOf(el.dataset.v); if (i >= 0) l.splice(i, 1); else l.push(el.dataset.v); render(); },
+
+    tab(el) {
+      S.tab = el.dataset.v;
+      if (S.tab === "rooms") S.unread = 0;
+      ui.room = null; ui.typing = null; ui.modal = null;
+      save(); render(); top();
+    },
+    go(el) {
+      const v = el.dataset.v;
+      if (v === "light") A.checkin();
+      else if (v === "compose") A.compose();
+      else if (v === "rooms") { S.tab = "rooms"; ui.room = "genel"; save(); render(); bottomScroll(); setTimeout(() => document.getElementById("chat-input")?.focus({ preventScroll: true }), 60); }
+      else if (v === "shop") { ui.modal = "shop"; render(); }
+    },
+    feedtab(el) { S.feedTab = el.dataset.v; save(); render(); },
+    hashtag(el) { ui.hashtag = el.dataset.v; ui.search = ""; S.tab = "feed"; ui.room = null; ui.modal = null; render(); top(); },
+    "clear-filter"() { ui.hashtag = null; ui.search = ""; const s = document.getElementById("search"); if (s) s.value = ""; render(); },
+    "more-trends"() { ui.allTrends = !ui.allTrends; render(); },
+    "show-new"() { S.extra = true; ui.pill = false; save(); render(); top(); },
+    follow(el) {
+      const h = el.dataset.v; S.follows[h] = !S.follows[h]; save(); render();
+      if (S.follows[h]) { toast(`${person(h).name} kapıyı açtı. Artık komşusunuz.`); setTimeout(() => { notify(`${person(h).name} de senin kapını çaldı.`, "door", { tab: "me" }); if (ui.view === "app" && !ui.story) render(); }, 3000); }
+    },
+
+    checkin() {
+      const t = today();
+      if (S.checkins.includes(t)) return;
+      const y = ymd(addDays(new Date(), -1)), y2 = ymd(addDays(new Date(), -2));
+      let usedBulb = false;
+      if (!S.checkins.includes(y) && S.checkins.includes(y2) && S.bulbs > 0) { S.checkins.push(y); S.bulbs--; usedBulb = true; }
+      S.checkins.push(t);
+      earn(5);
+      const st = streak();
+      const bonus = { 3: 10, 7: 25, 14: 40, 30: 80 }[st] || 0;
+      if (bonus) { earn(bonus); notify(`${st} günlük ışık serisi! ${bonus} çay ödül.`, "bulb", { tab: "me" }); }
+      save(); render();
+      toast(usedBulb ? `Dün ışığın sönmüştü, yedek ampul serini kurtardı. Seri: ${st} gün` : bonus ? `${st} gün seri! +${5 + bonus} çay` : `Işığın yandı. +5 çay · Seri: ${st} gün`);
+    },
+    box() {
+      if (S.box === today()) return;
+      const seed = hash(today() + myHandle());
+      const n = 3 + (seed % 10);
+      const bulb = seed % 7 === 0;
+      S.box = today();
+      earn(n);
+      if (bulb) S.bulbs++;
+      ui.rewardTea = n;
+      ui.rewardText = pick(D.kapici, seed >> 2).replace("{n}", n) + (bulb ? " Bir de yedek ampul çıktı!" : "");
+      ui.modal = "reward";
+      save(); render();
+    },
+    answer(el) { S.qa[today()] = Number(el.dataset.v); earn(2); save(); render(); toast("Oyun tutanağa geçti. +2 çay"); },
+    "list-claim"() { S.listDone = true; earn(20); notify("Taşınma tamam! Yerleşik sakin rozeti ve 20 çay senin.", "trophy", { tab: "me" }); save(); render(); toast("Artık yerleşik sakinsin. +20 çay"); },
+    anon() { ui.anon = !ui.anon; render(); },
+    compose() { ui.modal = "compose"; render(); setTimeout(() => document.getElementById("pt-modal")?.focus(), 30); },
+    story(el) { openStory(Number(el.dataset.v)); },
+    "story-next"() { storyStep(1); },
+    "story-prev"() { storyStep(-1); },
+    "story-close"() { closeStory(); },
+
+    like(el) { const id = el.dataset.v; S.likes[id] = !S.likes[id]; save(); render(); },
+    repost(el) { const id = el.dataset.v; S.reposts[id] = !S.reposts[id]; save(); render(); if (S.reposts[id]) toast("Notu panoya tekrar astın"); },
+    reply() { toast("Yorumlar bir sonraki sürümde geliyor"); },
+    "share-post"(el) { const p = allPostsRaw().find((x) => x.id === el.dataset.v); if (p) copyText(`"${p.text}" · evdeyiz panosundan`, "Not kopyalandı"); },
+    vote(el) { S.polls[el.dataset.id] = Number(el.dataset.v); save(); render(); toast("Oyun toplantı tutanağına geçti"); },
+
+    game(el) { ui.game = el.dataset.v; render(); },
+    lobby(el) {
+      const id = el.dataset.v, i = S.lobbies.indexOf(id);
+      if (i >= 0) { S.lobbies.splice(i, 1); toast(id === "tournament" ? "Turnuva kaydın silindi" : "Lobiden çıktın"); }
+      else {
+        S.lobbies.push(id);
+        toast(id === "tournament" ? "Takımın kayıtlı. Cuma 21:00'de bodrumda görüşürüz." : "Lobiye girdin, ilan sahibine haber verdik");
+        const l = D.lobbies.find((x) => x.id === id);
+        if (l) setTimeout(() => { notify(`${person(l.h).name} seni lobiye aldı. Oyun başlıyor.`, "pad", { tab: "party" }); if (ui.view === "app" && !ui.story) render(); }, 3500);
+      }
+      save(); render();
+    },
+    "lobby-del"(el) { S.myLobbies = S.myLobbies.filter((l) => l.id !== el.dataset.v); save(); render(); toast("İlan kaldırıldı"); },
+
+    room(el) { ui.room = el.dataset.v; render(); bottomScroll(); },
+    "room-back"() { ui.room = null; ui.typing = null; render(); top(); },
+    quick(el) { sendMsg(el.dataset.v); },
+
+    "calc-post"() {
+      const r = calcResult();
+      S.calcUsed = true;
+      S.posts.push({ id: "my" + Date.now(), at: Date.now(), anon: false,
+        text: `Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif saatine ${nf(r.saatlik)} ₺ ediyor. ${r.evKal ? "Evde kalıyorum." : "Bu teklifi düşünüyorum."} #30kyaHayır`,
+        calc: { maas: S.calc.maas, saatlik: Math.round(r.saatlik), evKal: r.evKal }, r: { reply: 0, repost: 0, like: 0, views: 1 } });
+      earn(3); afterPost(S.posts[S.posts.length - 1].id, "fiş");
+      S.tab = "feed"; S.feedTab = "foryou"; ui.hashtag = null; ui.search = ""; save(); render(); top();
+      toast("Fişin panoya asıldı. +3 çay");
+    },
+    "calc-copy"() {
+      const r = calcResult(); S.calcUsed = true; save();
+      copyText(`Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif = saati ${nf(r.saatlik)} ₺. Evde ayda ${nf(S.calc.ev)} ₺ ile yaşıyorum. Damga: ${r.evKal ? "EVDE KAL" : "BİR DÜŞÜN"}. Sen de kes: evdeyiz`);
+    },
+    "id-copy"() { const t = titleFor(daysAtHome()); copyText(`Ev Genci Sakin Kartım: @${myHandle()} · Daire ${daire(myHandle())} · ${t.name} · evde ${nf(daysAtHome())}. gün · No ${cardNo(S.user)}. Sen de taşın: evdeyiz`, "Sakin kartı kopyalandı"); },
+    ptab(el) { ui.ptab = el.dataset.v; render(); },
+
+    "shop-cat"(el) { ui.shopCat = el.dataset.v; render(); },
+    buy(el) {
+      const x = item(el.dataset.v); if (!x || S.tea < x.price) return;
+      S.tea -= x.price;
+      if (x.cat === "ampul") { S.bulbs++; save(); render(); toast(`Yedek ampul alındı. Elinde ${S.bulbs} tane var.`); return; }
+      S.inv.push(x.id); S.eq[x.cat] = x.id; save(); render();
+      toast(`${x.name} pencerene takıldı. Bütün apartman görüyor.`);
+    },
+    equip(el) { const x = item(el.dataset.v); if (!x) return; S.eq[x.cat] = x.id; save(); render(); },
+    unequip(el) { const x = item(el.dataset.v); if (!x) return; delete S.eq[x.cat]; save(); render(); },
+    "notif-go"(el) {
+      const n = S.notifs.find((x) => x.id === el.dataset.v);
+      ui.modal = null;
+      if (n?.go?.tab) { S.tab = n.go.tab; ui.room = null; save(); render(); top(); }
+      else if (n?.go?.modal) { ui.modal = n.go.modal; render(); }
+      else render();
+    },
+
+    modal(el) {
+      ui.modal = el.dataset.v; ui.confirmReset = false;
+      render();
+      if (ui.modal === "notifs" && unreadNotifs()) { S.notifs.forEach((n) => { n.read = true; }); save(); }
+    },
+    "modal-close"() { ui.modal = null; ui.confirmReset = false; render(); },
+    theme(el) { const v = el.dataset.v; S.theme = v === "null" ? null : v; save(); render(); },
+    "reset-ask"() { ui.confirmReset = true; render(); },
+    "reset-cancel"() { ui.confirmReset = false; render(); },
+    reset() {
+      clearInterval(storyTick); clearTimeout(pillTimer); store.clear(); S = fresh();
+      Object.assign(ui, { view: "landing", onb: blankOnb(), room: null, game: "all", hashtag: null, search: "", modal: null, confirmReset: false, story: null, ptab: "posts", typing: null, anon: false, pill: false });
+      render(); top();
+    }
+  };
+  const allPostsRaw = () => S.posts.map((p) => ({ ...p, mine: true })).concat(D.incoming, D.feed);
+
+  function submitPost(form) {
+    const where = form.dataset.where;
+    const ta = document.getElementById("pt-" + where);
+    const text = (ta?.value || "").trim();
+    if (text.length < 3) { toast("Biraz daha yaz, apartman dinliyor"); ta?.focus(); return; }
+    S.posts.push({ id: "my" + Date.now(), at: Date.now(), text, anon: ui.anon, r: { reply: 0, repost: 0, like: 0, views: 1 } });
+    if (S.posts.length > 60) S.posts = S.posts.slice(-60);
+    earn(3);
+    ta.value = "";
+    const first = S.posts.length === 1;
+    ui.modal = null; ui.anon = false; ui.hashtag = null; ui.search = ""; S.tab = "feed"; S.feedTab = "foryou";
+    save(); render(); top();
+    toast(first ? "İlk notun panoda. İtirafçı rozeti ve +3 çay senin." : "Notun panoya asıldı. +3 çay");
+    afterPost(S.posts[S.posts.length - 1].id);
+  }
+
+  function sendMsg(text) {
+    text = String(text || "").trim();
+    const roomId = ui.room;
+    if (!text || !roomId) return;
+    (S.rooms[roomId] ||= []).push({ me: true, text });
+    if (S.rooms[roomId].length > 60) S.rooms[roomId] = S.rooms[roomId].slice(-60);
+    earn(1);
+    const mine = roomMine();
+    save();
+    if (mine === 3) toast("Muhabbetçi rozeti senin");
+    const who = pick(D.replyHandles, hash(text + mine));
+    ui.typing = who;
+    render(); bottomScroll();
+    setTimeout(() => {
+      (S.rooms[roomId] ||= []).push({ h: who, text: pick(D.replies, hash(text) + mine) });
+      const here = ui.view === "app" && S.tab === "rooms" && ui.room === roomId;
+      ui.typing = null;
+      if (!here) { S.unread = (S.unread || 0) + 1; notify(`@${who} ${D.rooms.find((r) => r.id === roomId).title} odasında sana cevap verdi.`, "comment", { tab: "rooms" }); }
+      save();
+      if (ui.view === "app" && !ui.story) { render(); if (here) bottomScroll(); }
+    }, 1400);
+  }
+
+  /* ───────── Events ───────── */
+  document.addEventListener("click", (e) => {
+    if (e.target.classList?.contains("ov")) {
+      if (ui.view === "onb") return;
+      ui.modal = null; ui.confirmReset = false; render(); return;
+    }
+    const el = e.target.closest("[data-a]");
+    if (!el) return;
+    const fn = A[el.dataset.a];
+    if (fn) { e.preventDefault(); fn(el, e); }
+  });
+
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.id === "onb-name") {
+      ui.onb.data.name = t.value;
+      const n = document.querySelector('[data-a="onb-next"]'); if (n) n.disabled = t.value.trim().length < 2;
+    } else if (t.id === "search") {
+      ui.search = t.value; ui.hashtag = null;
+      if (S.tab !== "feed") { S.tab = "feed"; ui.room = null; }
+      render();
+    } else if (t.dataset.calc) {
+      const v = parseFloat(t.value);
+      S.calc[t.dataset.calc] = Number.isFinite(v) && v >= 0 ? v : 0;
+      S.calcUsed = true; save();
+      const out = document.getElementById("calc-out"); if (out) out.innerHTML = receipt(calcView());
+    } else updateCounter(t);
+  });
+
+  document.addEventListener("focusin", (e) => { if (e.target.id === "story-reply" && ui.story) ui.story.paused = Date.now() - ui.story.start; });
+  document.addEventListener("focusout", (e) => { if (e.target.id === "story-reply" && ui.story && ui.story.paused) { ui.story.start = Date.now() - ui.story.paused; ui.story.paused = false; } });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.id === "onb-name" && e.target.value.trim().length > 1) { e.preventDefault(); A["onb-next"](); return; }
+    if (ui.story && e.target.id !== "story-reply") {
+      if (e.key === "Escape") closeStory();
+      else if (e.key === "ArrowRight") storyStep(1);
+      else if (e.key === "ArrowLeft") storyStep(-1);
+      return;
+    }
+    if (e.key === "Escape" && ui.modal) { ui.modal = null; ui.confirmReset = false; render(); }
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && e.target.id?.startsWith("pt-")) { e.preventDefault(); submitPost(e.target.closest("form")); }
+  });
+
+  document.addEventListener("submit", (e) => {
+    const f = e.target, kind = f.dataset.form;
+    if (!kind) return;
+    e.preventDefault();
+    if (kind === "post") submitPost(f);
+    else if (kind === "chat") {
+      const input = document.getElementById("chat-input"); const v = input.value; input.value = "";
+      sendMsg(v); setTimeout(() => document.getElementById("chat-input")?.focus({ preventScroll: true }), 0);
+    } else if (kind === "lobby") {
+      const note = document.getElementById("lob-note").value.trim();
+      if (!note) { toast("Ne aradığını yaz, eşleşme kolaylaşsın"); document.getElementById("lob-note").focus(); return; }
+      S.myLobbies.push({ id: "ml" + Date.now(), game: document.getElementById("lob-game").value, rank: document.getElementById("lob-rank").value.trim() || "Rank fark etmez", role: "İlan", note, need: 1 });
+      if (S.myLobbies.length > 20) S.myLobbies = S.myLobbies.slice(-20);
+      save(); ui.modal = null; ui.game = "all"; S.tab = "party"; render(); top();
+      toast("İlanın oyun odasına asıldı");
+    } else if (kind === "profile") {
+      const v = document.getElementById("set-name").value.trim();
+      if (v.length < 2) { toast("Kapıdaki isim en az 2 harf olmalı"); return; }
+      S.user.name = v; S.user.wake = document.getElementById("set-wake").value; S.user.city = document.getElementById("set-city").value;
+      save(); render(); toast("Daire bilgilerin güncellendi");
+    } else if (kind === "story-reply") {
+      const input = document.getElementById("story-reply");
+      if (input.value.trim()) { input.value = ""; input.blur(); toast("Seslendin, pencereden duydular"); }
+    }
+  });
+
+  render();
+  if (ui.view === "app") armPill();
+})();
+
+</script>
+</body>
+</html>
