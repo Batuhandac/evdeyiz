@@ -853,7 +853,7 @@ window.EV_DATA = {
     notifs: [], stats: null, lit: [], newbies: [], leaders: null, qv: null,
     blocked: new Map(), hidden: new Set(), online: 0, roomOnline: {}, ann: [], seenAnn: new Set()
   };
-  const myDaire = () => R.me?.daire || S.user?.daire || null;
+  const myDaire = () => R.me?.daire ?? S.user?.daire ?? null;
 
   function errMsg(e) {
     const m = String(e?.message || e || "");
@@ -1261,7 +1261,7 @@ window.EV_DATA = {
     const h = u.handle || handleOf(u.name);
     return `
     <section class="sakin" aria-label="Sakin kartı">
-      <div class="sakin-top"><span>EV GENCİ SAKİN KARTI</span><span>DAİRE ${u.daire || "YENİ"}</span></div>
+      <div class="sakin-top"><span>EV GENCİ SAKİN KARTI</span><span>DAİRE ${u.daire ?? "YENİ"}</span></div>
       <div class="sakin-body">
         ${windowArt(eq, u.name)}
         <div class="grow">
@@ -1830,7 +1830,7 @@ window.EV_DATA = {
     g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.08)"; g.stroke();
     g.fillStyle = LAMP; g.font = `700 26px ${F}`;
     g.fillText("EV GENCİ SAKİN KARTI", cx + 48, cy + 66);
-    g.textAlign = "right"; g.fillText(`DAİRE ${u.daire || ""}`, cx + cw - 48, cy + 66); g.textAlign = "left";
+    g.textAlign = "right"; g.fillText(`DAİRE ${u.daire ?? ""}`, cx + cw - 48, cy + 66); g.textAlign = "left";
     g.fillStyle = "rgba(255,255,255,.1)"; g.fillRect(cx, cy + 100, cw, 2);
 
     // Yanan pencere
