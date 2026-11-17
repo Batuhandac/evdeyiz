@@ -615,6 +615,18 @@ button.opt:active { transform: scale(.98); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
+/* ───────── Şikayet / engelle, yasal bağlantılar ───────── */
+.note-head .more { margin-left: auto; width: 32px; height: 32px; color: var(--fg-3); flex-shrink: 0; }
+.lobby-act { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.lobby-act .more { width: 32px; height: 28px; color: var(--fg-3); }
+button.bname { display: inline-flex; align-items: center; gap: 4px; }
+.ico-xs { width: 12px; height: 12px; }
+.land-foot a, .side-foot a { color: inherit; text-decoration: none; }
+.legal-links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+.legal-links a, .consent a { color: var(--accent); text-decoration: none; }
+.consent { margin-top: 12px; line-height: 1.5; }
+.mod-sheet .btn.block { justify-content: flex-start; gap: 10px; }
+
 html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
 </style>
 </head>
@@ -854,7 +866,7 @@ window.EV_DATA = {
     lobbies: [], myLobbies: [], rooms: {}, unread: 0,
     calc: { maas: 30000, yol: 2500, yemek: 3500, isSaat: 9, yolSaat: 2, ev: 5000 }, calcUsed: false,
     tea: 0, teaTotal: 0, inv: [], eq: {}, bulbs: 1, box: null, qa: {}, notifs: [], extra: false, listDone: false,
-    tab: "feed", feedTab: "foryou", theme: "dark"
+    tab: "feed", feedTab: "foryou", theme: "dark", blocked: {}, hidden: {}
   });
   let S = Object.assign(fresh(), store.load() || {});
   const save = () => store.save(S);
@@ -864,7 +876,7 @@ window.EV_DATA = {
     view: S.user ? "app" : "landing", onb: blankOnb(),
     room: null, game: "all", hashtag: null, search: "", allTrends: false,
     modal: null, shareText: "", cardUrl: "", confirmReset: false, shopCat: "perde", rewardText: "", rewardTea: 0,
-    story: null, ptab: "posts", typing: null, anon: false, pill: false
+    story: null, ptab: "posts", typing: null, anon: false, pill: false, mod: null
   };
 
   /* ───────── Helpers ───────── */
@@ -884,6 +896,10 @@ window.EV_DATA = {
   const daire = (h) => hash(h) % 98 + 1;
   const liveCount = () => 41000 + (hash(today()) % 9000) + new Date().getHours() * 137;
   const SITE = "batuhandac.github.io/evdeyiz";
+  const RULES = "https://batuhandac.github.io/evdeyiz/kurallar.html";
+  const PRIVACY = "https://batuhandac.github.io/evdeyiz/gizlilik.html";
+  const SUPPORT = "https://batuhandac.github.io/evdeyiz/destek.html";
+  const ext = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
   function timeLine() {
     const d = new Date(), h = d.getHours();
     const hm = d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
@@ -1004,7 +1020,10 @@ window.EV_DATA = {
     bulb: '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
     trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
     gear: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
-    arrowUp: '<path d="M12 19V5M5 12l7-7 7 7"/>'
+    arrowUp: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+    dots: '<circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/>',
+    flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+    block: '<circle cx="12" cy="12" r="9"/><path d="m5.7 5.7 12.6 12.6"/>'
   };
   const ic = (n, cls = "ico", sw = 2) => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
   const star = () => `<svg class="star" viewBox="0 0 24 24" aria-label="Kıdemli sakin"><path fill="currentColor" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>`;
@@ -1070,7 +1089,7 @@ window.EV_DATA = {
           <p class="xs faint">Ücretsiz · takma adla · 30 saniye</p>
         </div>
       </main>
-      <footer class="land-foot"><span>Apartman kuralları</span><span>Gizlilik</span><span>© 2026 evdeyiz · prototip, içerik örnektir</span></footer>
+      <footer class="land-foot">${ext(RULES, "Apartman kuralları")}${ext(PRIVACY, "Gizlilik")}${ext(SUPPORT, "Destek")}<span>© 2026 evdeyiz · panodaki ilk içerikler örnektir</span></footer>
     </div>`;
   }
 
@@ -1095,7 +1114,7 @@ window.EV_DATA = {
         <div class="game-grid">${D.games.map((g) => `<button class="game-pick" data-a="onb-game" data-v="${g.id}" aria-pressed="${data.games.includes(g.id)}"><span class="gcode" style="background:${g.color}">${g.code}</span><span class="grow">${esc(g.short)}</span>${data.games.includes(g.id) ? `<span style="color:var(--lamp-text)">${ic("check", "ico-sm", 3)}</span>` : ""}</button>`).join("")}</div>`;
     } else {
       next = "Daireme gir";
-      body = `<h2>Daire ${daire(handleOf(data.name))} senin.</h2><p class="hint">Sakin kartın hazır. Hoş geldin hediyesi olarak kapında 10 çay var.</p>${sakinCard({ ...data, joinedAt: today() }, {})}`;
+      body = `<h2>Daire ${daire(handleOf(data.name))} senin.</h2><p class="hint">Sakin kartın hazır. Hoş geldin hediyesi olarak kapında 10 çay var.</p>${sakinCard({ ...data, joinedAt: today() }, {})}<p class="xs muted consent">Daireme gir’e basınca ${ext(RULES, "apartman kurallarını")} ve ${ext(PRIVACY, "gizlilik metnini")} kabul etmiş olursun. Taciz, nefret söylemi ve “git iş bul” nasihati yasak; kuralı çiğneyen apartmandan çıkarılır.</p>`;
     }
     return `
     <div class="ov onb" role="dialog" aria-modal="true" aria-label="Kayıt">
@@ -1178,7 +1197,7 @@ window.EV_DATA = {
         <h2 class="list-title">Yeni komşular</h2>
         ${D.suggest.map((h) => { const p = person(h); const on = !!S.follows[h]; return `<div class="list-row">${av(h)}<div class="grow"><div class="b ellip">${esc(p.name)}${p.badge ? star() : ""}</div><div class="xs muted">Daire ${daire(h)}</div></div><button class="btn sm ${on ? "on" : ""}" data-a="follow" data-v="${h}">${on ? "Komşusun" : "Kapıyı çal"}</button></div>`; }).join("")}
       </section>
-      <div class="side-foot"><span>Apartman kuralları</span><span>Gizlilik</span><span>© 2026 evdeyiz</span></div>`;
+      <div class="side-foot">${ext(RULES, "Apartman kuralları")}${ext(PRIVACY, "Gizlilik")}${ext(SUPPORT, "Destek")}<span>© 2026 evdeyiz</span></div>`;
   }
 
   function leadersCard(extraCls = "") {
@@ -1194,6 +1213,7 @@ window.EV_DATA = {
   function allPosts() {
     const mine = S.posts.slice().reverse().map((p) => ({ ...p, mine: true }));
     let list = mine.concat(S.extra ? D.incoming : [], D.feed);
+    list = list.filter((p) => p.mine || (!S.blocked[p.h] && !S.hidden[p.id]));
     if (S.feedTab === "popular") list = list.slice().sort((a, b) => (b.r?.like || 0) - (a.r?.like || 0));
     if (ui.hashtag) list = list.filter((p) => lower(p.text).includes("#" + lower(ui.hashtag)));
     if (ui.search.trim()) { const q = lower(ui.search.trim()); list = list.filter((p) => lower(p.text).includes(q) || lower(p.h || "").includes(q) || lower(person(p.h || "").name).includes(q)); }
@@ -1305,7 +1325,7 @@ window.EV_DATA = {
     return `
     <article class="card note ${fresh ? "fresh" : ""}" aria-label="${esc(name)} notu">
       ${rep ? `<div class="shared-by">${ic("pin", "ico-sm")}Panoya tekrar astın</div>` : ""}
-      <div class="note-head">${avatar}<div class="grow"><div class="note-name"><span>${esc(name)}</span>${badge ? star() : ""}</div><div class="note-meta"><span class="daire">D.${no}</span><span>${esc(p.mine ? ago(p.at) : p.ago)}</span></div></div></div>
+      <div class="note-head">${avatar}<div class="grow"><div class="note-name"><span>${esc(name)}</span>${badge ? star() : ""}</div><div class="note-meta"><span class="daire">D.${no}</span><span>${esc(p.mine ? ago(p.at) : p.ago)}</span></div></div>${p.mine ? "" : modBtn("post", p.id, h)}</div>
       <div class="note-text">${linkify(p.text)}</div>
       ${p.poll ? meetingHtml(p) : ""}
       ${p.calc ? `<button class="embed" data-a="tab" data-v="calc">${receipt(p.calc, true)}</button><div class="embed-cap">${ic("receipt", "ico-sm")}Kendi fişini kes</div>` : ""}
@@ -1318,6 +1338,8 @@ window.EV_DATA = {
       </div>
     </article>`;
   }
+
+  const modBtn = (kind, id, h) => `<button class="icon-btn more" data-a="mod" data-k="${kind}" data-id="${esc(id)}" data-h="${esc(h)}" aria-label="Şikayet et veya engelle">${ic("dots")}</button>`;
 
   function meetingHtml(p) {
     const voted = S.polls[p.id];
@@ -1397,7 +1419,7 @@ window.EV_DATA = {
   /* ───────── Oyun odası ───────── */
   function pageParty() {
     const mine = S.user.games || [];
-    const all = S.myLobbies.slice().reverse().map((l) => ({ ...l, mine: true })).concat(D.lobbies);
+    const all = S.myLobbies.slice().reverse().map((l) => ({ ...l, mine: true })).concat(D.lobbies).filter((l) => l.mine || (!S.blocked[l.h] && !S.hidden[l.id]));
     const list = all.filter((l) => ui.game === "all" || (ui.game === "mine" ? mine.includes(l.game) : l.game === ui.game));
     const t = D.tournament, inT = S.lobbies.includes("tournament");
     const teams = t.teams + (inT ? 1 : 0);
@@ -1430,7 +1452,7 @@ window.EV_DATA = {
         <p style="margin-top:4px">${esc(l.note)}</p>
         <div class="tags"><span class="tag">${esc(g.short)}</span><span class="tag">${esc(l.rank)}</span><span class="tag">${esc(l.role)}</span>${l.mine ? '<span class="tag mine">Senin ilanın</span>' : `<span class="tag hot">${l.need} kişi lazım</span>`}</div>
       </div>
-      ${l.mine ? `<button class="btn sm ghost" data-a="lobby-del" data-v="${l.id}">Kaldır</button>` : `<button class="btn sm ${joined ? "on" : ""}" data-a="lobby" data-v="${l.id}">${joined ? "Lobidesin" : "Katıl"}</button>`}
+      ${l.mine ? `<button class="btn sm ghost" data-a="lobby-del" data-v="${l.id}">Kaldır</button>` : `<div class="lobby-act"><button class="btn sm ${joined ? "on" : ""}" data-a="lobby" data-v="${l.id}">${joined ? "Lobidesin" : "Katıl"}</button>${modBtn("lobby", l.id, h)}</div>`}
     </article>`;
   }
 
@@ -1454,6 +1476,7 @@ window.EV_DATA = {
     const r = D.rooms.find((x) => x.id === ui.room);
     const groups = [];
     for (const m of roomMsgs(r.id)) {
+      if (!m.me && S.blocked[m.h]) continue;
       const key = m.me ? "__me" : m.h;
       const g = groups[groups.length - 1];
       if (g && g.key === key) g.items.push(m); else groups.push({ key, items: [m] });
@@ -1464,7 +1487,7 @@ window.EV_DATA = {
         <p class="sm muted" style="text-align:center">${esc(r.sub)}. Odaya hoş geldin.</p>
         ${groups.map((g) => g.key === "__me"
           ? `<div class="bgroup me"><div class="bubbles">${g.items.map((m) => `<div class="bubble">${esc(m.text)}</div>`).join("")}</div></div>`
-          : `<div class="bgroup">${av(g.key, "s32")}<div class="bubbles"><div class="bname">@${esc(g.key)} · D.${daire(g.key)}</div>${g.items.map((m) => `<div class="bubble">${esc(m.text)}</div>`).join("")}</div></div>`).join("")}
+          : `<div class="bgroup">${av(g.key, "s32")}<div class="bubbles"><button class="bname" data-a="mod" data-k="user" data-id="" data-h="${esc(g.key)}" aria-label="@${esc(g.key)} için seçenekler">@${esc(g.key)} · D.${daire(g.key)} ${ic("dots", "ico-xs")}</button>${g.items.map((m) => `<div class="bubble">${esc(m.text)}</div>`).join("")}</div></div>`).join("")}
         ${ui.typing ? `<div class="typing"><i></i><i></i><i></i>&nbsp;@${esc(ui.typing)} yazıyor</div>` : ""}
       </section>
       <div class="card composer-dock">
@@ -1567,6 +1590,15 @@ window.EV_DATA = {
         <div class="field"><label for="lob-note">Ne arıyorsun?</label><div class="input"><textarea id="lob-note" rows="3" maxlength="120" placeholder="ör. Toksik olmayan supp, gece 11'den sonra"></textarea></div></div>
         <button class="btn lamp lg block" type="submit">İlanı as</button>
       </form>`;
+    } else if (ui.modal === "mod" && ui.mod) {
+      const m = ui.mod, what = m.kind === "post" ? "Bu notu" : m.kind === "lobby" ? "Bu ilanı" : `@${esc(m.h)} kişisini`;
+      if (m.step === "report") {
+        title = "Neden şikayet ediyorsun?";
+        body = `<div class="sheet-body mod-sheet" style="gap:8px">${["Taciz veya zorbalık", "Nefret söylemi", "Cinsel veya şiddet içerikli", "Spam veya dolandırıcılık", "Kendine zarar verme", "Başka bir şey"].map((t) => `<button class="btn ghost block" data-a="mod-reason" data-v="${t}">${t}</button>`).join("")}<p class="xs muted">Şikayetler 24 saat içinde incelenir. Kuralı çiğneyen içerik kaldırılır, sahibi apartmandan çıkarılır.</p></div>`;
+      } else {
+        title = m.kind === "user" ? "@" + esc(m.h) : "Seçenekler";
+        body = `<div class="sheet-body mod-sheet" style="gap:8px"><button class="btn ghost block" data-a="mod-report">${ic("flag", "ico-sm")}${what} şikayet et</button><button class="btn red-ghost block" data-a="mod-block">${ic("block", "ico-sm")}@${esc(m.h)} kişisini engelle</button><p class="xs muted">Engellediğin kişinin notlarını, ilanlarını ve mesajlarını görmezsin. Engeli Daire ayarlarından kaldırabilirsin.</p></div>`;
+      }
     } else if (ui.modal === "shop") {
       title = "Köşedeki bakkal";
       body = shopBody();
@@ -1585,8 +1617,10 @@ window.EV_DATA = {
           <button class="btn lamp" type="submit">Kaydet</button>
         </form>
         <div class="field"><span class="sm muted">Görünüm</span><div class="theme-seg">${[[null, "Sistem"], ["dark", "Gece"], ["light", "Gündüz"]].map(([v, l]) => `<button data-a="theme" data-v="${v}" aria-pressed="${S.theme === v}">${l}</button>`).join("")}</div></div>
+        ${Object.keys(S.blocked).length ? `<div class="field"><span class="sm muted">Engellediklerin</span>${Object.keys(S.blocked).map((h) => `<div class="row" style="justify-content:space-between"><span>@${esc(h)}</span><button class="btn sm ghost" data-a="unblock" data-v="${esc(h)}">Engeli kaldır</button></div>`).join("")}</div>` : ""}
+        <div class="legal-links">${ext(RULES, "Apartman kuralları")}${ext(PRIVACY, "Gizlilik")}${ext(SUPPORT, "Destek ve şikayet")}</div>
         <div class="danger">
-          <div><b>Daireyi boşalt</b><p class="sm muted">Sakin kartın, notların, çayın ve ışık geçmişin bu tarayıcıdan silinir. Geri alınamaz.</p></div>
+          <div><b>Daireyi boşalt (hesabı sil)</b><p class="sm muted">Sakin kartın, notların, çayın ve ışık geçmişin bu cihazdan kalıcı olarak silinir. Geri alınamaz.</p></div>
           ${ui.confirmReset ? `<div class="btn-row"><button class="btn ghost" data-a="reset-cancel">Vazgeç</button><button class="btn red" data-a="reset">Evet, boşalt</button></div>` : `<button class="btn red-ghost" data-a="reset-ask">Daireyi boşalt</button>`}
         </div>
       </div>`;
@@ -1914,12 +1948,22 @@ window.EV_DATA = {
       if (ui.modal === "notifs" && unreadNotifs()) { S.notifs.forEach((n) => { n.read = true; }); save(); }
     },
     "modal-close"() { ui.modal = null; ui.confirmReset = false; render(); },
+    mod(el) { ui.mod = { kind: el.dataset.k, id: el.dataset.id, h: el.dataset.h, step: "menu" }; ui.modal = "mod"; render(); },
+    "mod-report"() { ui.mod.step = "report"; render(); },
+    "mod-reason"() {
+      const m = ui.mod;
+      if (m.id) S.hidden[m.id] = 1;
+      save(); ui.modal = null; ui.mod = null; render();
+      toast(m.id ? "Şikayetin alındı. Bu içerik artık sana görünmüyor." : "Şikayetin alındı, 24 saat içinde incelenir.");
+    },
+    "mod-block"() { const h = ui.mod.h; S.blocked[h] = 1; save(); ui.modal = null; ui.mod = null; render(); toast(`@${h} engellendi`); },
+    unblock(el) { delete S.blocked[el.dataset.v]; save(); render(); },
     theme(el) { const v = el.dataset.v; S.theme = v === "null" ? null : v; save(); render(); },
     "reset-ask"() { ui.confirmReset = true; render(); },
     "reset-cancel"() { ui.confirmReset = false; render(); },
     reset() {
       clearInterval(storyTick); clearTimeout(pillTimer); store.clear(); S = fresh();
-      Object.assign(ui, { view: "landing", onb: blankOnb(), room: null, game: "all", hashtag: null, search: "", modal: null, confirmReset: false, story: null, ptab: "posts", typing: null, anon: false, pill: false });
+      Object.assign(ui, { view: "landing", onb: blankOnb(), room: null, game: "all", hashtag: null, search: "", modal: null, confirmReset: false, story: null, ptab: "posts", typing: null, anon: false, pill: false, mod: null });
       render(); top();
     }
   };
