@@ -1486,7 +1486,7 @@ window.EV_DATA = {
     const at = new Date(p.created_at).getTime();
     return `
     <article class="card note" aria-label="${esc(name)} notu">
-      <div class="note-head">${p.anon || p.mine ? avatar : `<button data-a="neighbor" data-v="${p.a_id}" aria-label="${esc(name)} dairesi">${avatar}</button>`}<div class="grow"><div class="note-name"><span>${esc(name)}</span>${badge ? star() : ""}</div><div class="note-meta"><span class="daire">D.${no}</span><span>${esc(ago(at))}</span></div></div>${modBtn(p.mine ? "mypost" : "post", p.id, p.a_id || "", p.a_handle || "")}</div>
+      <div class="note-head">${p.anon || p.mine ? avatar : `<button data-a="neighbor" data-v="${p.a_id}" aria-label="${esc(name)} dairesi">${avatar}</button>`}<div class="grow"><div class="note-name"><span>${esc(name)}</span>${badge ? star() : ""}</div><div class="note-meta">${p.anon ? "" : `<span class="daire">D.${no}</span>`}<span>${esc(ago(at))}</span></div></div>${modBtn(p.mine ? "mypost" : "post", p.id, p.a_id || "", p.a_handle || "")}</div>
       <div class="note-text">${linkify(p.text)}</div>
       ${p.calc ? `<button class="embed" data-a="tab" data-v="calc">${receipt(p.calc, true)}</button><div class="embed-cap">${ic("receipt", "ico-sm")}Kendi fişini kes</div>` : ""}
       <div class="note-foot">
