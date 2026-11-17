@@ -412,6 +412,7 @@ button.opt:hover { border-color: var(--lamp); }
 .danger { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .btn.red { background: var(--tomato); color: #fff; }
 .btn.red-ghost { background: transparent; color: var(--tomato); border-color: var(--tomato); }
+.card-img { display: block; width: 100%; max-width: 380px; margin: 0 auto 14px; border-radius: 16px; box-shadow: var(--shadow); -webkit-touch-callout: default; }
 .share-text { width: 100%; min-height: 110px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); resize: none; }
 .theme-seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg-3); border-radius: 12px; padding: 3px; }
 .theme-seg button { padding: 9px; border-radius: 9px; font-weight: 600; color: var(--fg-2); }
@@ -684,11 +685,11 @@ window.EV_DATA = {
 
   feed: [
     { id: "p1", h: "kanepe_kral", ago: "2 sa",
-      text: "30k teklif geldi. Yol günde 2 saat, yemek ayrı. Oturdum hesapladım, saati 99 lira ediyor. Evde ayda 5k ile krallar gibi yaşıyorum. Reddettim, pişman değilim. #30kyaHayır",
+      text: "30k teklif geldi. Yol günde 2 saat, yemek ayrı. Oturdum hesapladım, saati 99 lira ediyor. Evde ayda 5k ile krallar gibi yaşıyorum. Reddettim, pişman değilim. #fişimikestim",
       calc: { maas: 30000, saatlik: 99, evKal: true },
       r: { reply: 214, repost: 512, like: 1243, views: 48200 } },
     { id: "poll1", h: "anket_kanka", ago: "3 sa",
-      text: "Apartman toplantısı: 30k teklif gelse ne yaparsın? #30kyaHayır",
+      text: "Apartman toplantısı: 30k teklif gelse ne yaparsın? #fişimikestim",
       poll: { opts: ["Kabul, hemen başlarım", "Reddederim, evde 5k yeter", "Önce hesaplarım, sonra karar"], votes: [1840, 6720, 3410], left: "2 gün kaldı" },
       r: { reply: 388, repost: 920, like: 2104, views: 96400 } },
     { id: "p2", h: "ogle_uyanan", ago: "3 sa",
@@ -715,7 +716,7 @@ window.EV_DATA = {
   ],
 
   trends: [
-    { cat: "Türkiye gündeminde",  tag: "30kyaHayır",   count: "24,1B gönderi" },
+    { cat: "Türkiye gündeminde",  tag: "fişimikestim", count: "24,1B gönderi" },
     { cat: "Ev hayatı · Gündemde", tag: "evgenci",      count: "58,3B gönderi" },
     { cat: "Gündemde",             tag: "komşununoğlu", count: "9.204 gönderi" },
     { cat: "Ekonomi · Gündemde",   tag: "5kileyaşam",   count: "12,7B gönderi" },
@@ -873,7 +874,7 @@ window.EV_DATA = {
   const ui = {
     view: S.user ? "app" : "landing", onb: blankOnb(),
     room: null, game: "all", hashtag: null, search: "", allTrends: false,
-    modal: null, shareText: "", confirmReset: false, shopCat: "perde", rewardText: "", rewardTea: 0,
+    modal: null, shareText: "", cardUrl: "", confirmReset: false, shopCat: "perde", rewardText: "", rewardTea: 0,
     story: null, ptab: "posts", typing: null, anon: false, pill: false
   };
 
@@ -893,6 +894,7 @@ window.EV_DATA = {
   const person = (h) => D.people[h] || { name: h.replace(/_/g, " "), badge: false };
   const daire = (h) => hash(h) % 98 + 1;
   const liveCount = () => 41000 + (hash(today()) % 9000) + new Date().getHours() * 137;
+  const SITE = "batuhandac.github.io/evdeyiz";
   const ago = (ms) => { const m = Math.floor((Date.now() - ms) / 60000); if (m < 1) return "şimdi"; if (m < 60) return `${m} dk`; const h = Math.floor(m / 60); return h < 24 ? `${h} sa` : `${Math.floor(h / 24)} g`; };
   const initial = (s) => esc(String(s || "?")[0].toLocaleUpperCase("tr"));
   const dayNo = () => Math.floor(new Date(today() + "T00:00:00").getTime() / 86400000);
@@ -1034,7 +1036,7 @@ window.EV_DATA = {
       <div class="facade-roof"></div>
       <div class="facade-grid" style="--cols:${cols}">${cells}</div>
       <div class="facade-door"></div>
-      ${caption ? `<div class="facade-cap"><div class="row" style="gap:8px"><span class="live-dot"></span><span class="xs" style="color:rgba(245,240,255,.7)">Şu an evde</span></div><div class="facade-num">${nf(liveCount())}</div><p>pencerede ışık yanıyor${meOn ? ". Biri de senin." : ". Seninki de yansın."}</p></div>` : ""}
+      ${caption ? `<div class="facade-cap"><div class="row" style="gap:8px"><span class="live-dot"></span><span class="xs" style="color:rgba(245,240,255,.7)">Apartmanda</span></div><div class="facade-num">${nf(liveCount())}</div><p>komşu şu an evde${meOn ? ". Biri de sensin." : ". Kapı açık, uğra."}</p></div>` : ""}
     </div>`;
   }
 
@@ -1049,10 +1051,10 @@ window.EV_DATA = {
         <div class="land-copy">
           <span class="eyebrow">Türkiye'nin ev gençleri apartmanı</span>
           <h1>Ben de ev genciyim. <em>Sen de.</em></h1>
-          <p class="lead">Burada kimse "iş buldun mu?" diye sormaz. Panoya not bırak, gece balkonda muhabbet et, pencereni süsle, 30k teklifin fişini kes.</p>
+          <p class="lead">Burada kimse "iş buldun mu?" diye sormaz. Panoya not bırak, gece balkonda muhabbet et, pencereni süsle, gelen teklifin fişini kes.</p>
           <div class="land-cta">
-            <button class="btn lamp lg" data-a="start">Işığını yak</button>
-            <span class="land-live"><span class="live-dot"></span><span><b>${nf(liveCount())}</b> pencerede ışık yanıyor</span></span>
+            <button class="btn lamp lg" data-a="start">Anahtarını al</button>
+            <span class="land-live"><span class="live-dot"></span><span><b>${nf(liveCount())}</b> komşu şu an evde</span></span>
           </div>
         </div>
         <div class="land-art">
@@ -1062,7 +1064,7 @@ window.EV_DATA = {
         </div>
       </main>
       <section class="floors-strip">
-        <div class="card floor">${roomIc({ color: "#FF6B4A", icon: "bag" })}<div><h3>Her gün kapına poşet</h3><p>Kapıcı her gün bir şey bırakır. Işığını yak, serini koru, çay topla.</p></div></div>
+        <div class="card floor">${roomIc({ color: "#FF6B4A", icon: "bag" })}<div><h3>Her gün kapına poşet</h3><p>Kapıcı her gün bir şey bırakır. Evdeysen ışığını yak, serini koru, çay topla.</p></div></div>
         <div class="card floor">${roomIc(rs("gece"))}<div><h3>Odalar ve pano</h3><p>Salon, Balkon, Bodrum. Yaz, "ben de" de, yalnız olmadığını gör.</p></div></div>
         <div class="card floor">${roomIc({ color: "#2FBF8F", icon: "store" })}<div><h3>Bakkal ve pencerem</h3><p>Çaylarınla perde, sardunya, kedi al. Pencereni bütün apartman görsün.</p></div></div>
       </section>
@@ -1203,7 +1205,7 @@ window.EV_DATA = {
     return `
       ${ui.pill && !filter ? `<button class="new-pill" data-a="show-new">${ic("arrowUp", "ico-sm", 2.6)}2 yeni not</button>` : ""}
       <div class="page-head">
-        <div><h1>Apartman panosu</h1><p>Bugün ${nf(liveCount())} pencerede ışık yanıyor.</p></div>
+        <div><h1>Apartman panosu</h1><p>Bugün ${nf(liveCount())} komşu evde.</p></div>
         <div class="seg" role="group" aria-label="Sıralama"><button data-a="feedtab" data-v="foryou" aria-pressed="${S.feedTab === "foryou"}">Yeni</button><button data-a="feedtab" data-v="popular" aria-pressed="${S.feedTab === "popular"}">En çok "ben de"</button></div>
       </div>
       ${filter ? `<div class="filter-bar"><span><span class="muted">Panoda:</span> <b>${ui.hashtag ? "#" + esc(ui.hashtag) : `"${esc(ui.search.trim())}"`}</b> · ${posts.length} not</span><button class="btn sm ghost" data-a="clear-filter">Temizle</button></div>` : `${windowsRow()}${todayCard()}${checklistCard()}${questionCard()}`}
@@ -1499,7 +1501,7 @@ window.EV_DATA = {
     if (ui.ptab === "posts") {
       content = myPosts.length ? myPosts.map(noteHtml).join("") : `<div class="card empty"><span class="win"></span><h2>Panoda notun yok</h2><p>İlk notunu as, kaç komşunun "ben de" dediğini gör. +3 çay.</p><button class="btn lamp" data-a="compose">İlk notunu yaz</button></div>`;
     } else if (ui.ptab === "card") {
-      content = `${sakinCard(u)}<div class="btn-row" style="max-width:520px"><button class="btn lamp" data-a="id-copy">Sakin kartını kopyala</button></div>`;
+      content = `${sakinCard(u)}<div class="btn-row" style="max-width:520px"><button class="btn lamp" data-a="card-share">${ic("share", "ico-sm")}Kartını paylaş</button><button class="btn ghost" data-a="id-copy">Metni kopyala</button></div>`;
     } else {
       content = `<div class="badges">${D.badges.map((b) => `<div class="card badge"><span class="win ${e[b.id] ? "lit" : ""}"></span><b>${esc(b.label)}</b><span>${esc(b.desc)}</span></div>`).join("")}</div>
         <section class="card ladder"><h2 class="list-title">Kıdem yolu</h2>${D.titles.map((x) => `<div class="step">${win(days >= x.min)}<div class="grow"><div class="b">${esc(x.name)}</div><div class="xs muted">${x.min}. günden itibaren</div></div><span class="sm ${days >= x.min ? "" : "muted"}">${days >= x.min ? "Açıldı" : `${x.min - days} gün kaldı`}</span></div>`).join("")}</section>`;
@@ -1589,6 +1591,13 @@ window.EV_DATA = {
     } else if (ui.modal === "share") {
       title = "Kopyala ve paylaş";
       body = `<div class="sheet-body"><p class="sm muted">Otomatik kopyalama burada çalışmadı. Metni seçip kopyalayabilirsin.</p><textarea class="share-text" id="share-text" readonly>${esc(ui.shareText)}</textarea></div>`;
+    } else if (ui.modal === "card") {
+      title = "Sakin kartın hazır";
+      const send = canSendCard();
+      const touch = !matchMedia("(pointer: fine)").matches;
+      body = `<div class="sheet-body"><img class="card-img" src="${ui.cardUrl}" alt="Sakin kartı görseli" />
+        ${!send && touch ? `<p class="sm muted" style="text-align:center">Görsele basılı tut, fotoğraflarına kaydet. Sonra X'te ya da hikâyende paylaş.</p>` : ""}
+        <div class="btn-row">${send ? `<button class="btn lamp" data-a="card-send">${ic("share", "ico-sm")}Paylaş</button>` : touch ? "" : `<a class="btn lamp" href="${ui.cardUrl}" download="${cardFileName()}">Görseli indir</a>`}<button class="btn ghost" data-a="id-copy">Metni kopyala</button></div></div>`;
     }
     return `<div class="ov" role="dialog" aria-modal="true" aria-label="${esc(title)}">
       <div class="sheet"><div class="sheet-head"><h2>${esc(title)}</h2><button class="icon-btn" data-a="modal-close" aria-label="Kapat">${ic("x")}</button></div>${body}</div>
@@ -1620,6 +1629,99 @@ window.EV_DATA = {
   function copyText(text, okMsg = "Kopyalandı") {
     const fallback = () => { ui.shareText = text; ui.modal = "share"; render(); setTimeout(() => document.getElementById("share-text")?.select(), 30); };
     try { navigator.clipboard.writeText(text).then(() => toast(okMsg), fallback); } catch { fallback(); }
+  }
+
+  /* ───────── Paylaşılabilir sakin kartı (1080×1350 PNG) ───────── */
+  let cardFile = null;
+  const cardFileName = () => `evdeyiz-daire-${daire(myHandle())}.png`;
+  const cardText = () => `Ev genci sakin kartım: Daire ${daire(myHandle())} · ${titleFor(daysAtHome()).name} · evde ${nf(daysAtHome())}. gün. Sen de taşın: ${SITE}`;
+  const canSendCard = () => !!window.ReactNativeWebView || (!!cardFile && !!navigator.canShare && navigator.canShare({ files: [cardFile] }));
+
+  async function drawCard(u = S.user) {
+    const DISP = '"Unbounded", "Arial Black", system-ui, sans-serif';
+    const BODY = '"Rubik", system-ui, -apple-system, "Segoe UI", sans-serif';
+    try { await Promise.all([`800 60px ${DISP}`, `600 30px ${BODY}`, `700 26px ${BODY}`].map((f) => document.fonts.load(f))); } catch { /* sistem fontuyla devam */ }
+    const W = 1080, H = 1350;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    const LAMP = "#FFC247", FG = "#F5F0FF", DIM = "rgba(245,240,255,.6)";
+    const box = (x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
+    const fit = (text, max) => { let t = String(text); if (g.measureText(t).width <= max) return t; while (t.length > 1 && g.measureText(t + "…").width > max) t = t.slice(0, -1); return t + "…"; };
+    const h = handleOf(u.name), days = daysAtHome(u);
+
+    // Zemin: gece ve arkada sönük apartman pencereleri
+    g.fillStyle = "#120E24"; g.fillRect(0, 0, W, H);
+    let seed = hash(h) || 1;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    for (let y = 24; y < H; y += 74) for (let x = 24; x < W; x += 74) {
+      g.fillStyle = rnd() < 0.3 ? "rgba(255,194,71,.10)" : "rgba(53,44,102,.35)";
+      box(x, y, 50, 50, 8); g.fill();
+    }
+
+    // Marka
+    g.textBaseline = "alphabetic";
+    g.fillStyle = FG; g.font = `800 52px ${DISP}`; g.fillText("evdeyiz", 90, 140);
+
+    // Kart
+    const cx = 90, cy = 200, cw = 900, ch = 720;
+    const grad = g.createLinearGradient(cx, cy, cx + cw * 0.6, cy + ch);
+    grad.addColorStop(0, "#2A1F5C"); grad.addColorStop(1, "#160F33");
+    g.save(); g.shadowColor = "rgba(5,3,15,.6)"; g.shadowBlur = 60; g.shadowOffsetY = 20;
+    box(cx, cy, cw, ch, 44); g.fillStyle = grad; g.fill(); g.restore();
+    box(cx, cy, cw, ch, 44); g.strokeStyle = "rgba(255,255,255,.1)"; g.lineWidth = 2; g.stroke();
+
+    g.fillStyle = LAMP; g.font = `700 26px ${BODY}`;
+    g.textAlign = "left"; g.fillText("EV GENCİ SAKİN KARTI", cx + 50, cy + 66);
+    g.textAlign = "right"; g.fillText(`DAİRE ${daire(h)}`, cx + cw - 50, cy + 66); g.textAlign = "left";
+    const dash = (y) => { g.save(); g.setLineDash([10, 10]); g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 2; g.beginPath(); g.moveTo(cx + 40, y); g.lineTo(cx + cw - 40, y); g.stroke(); g.restore(); };
+    dash(cy + 104);
+
+    // Yanan pencere
+    const wx = cx + 50, wy = cy + 150, ww = 250, wh = 310;
+    g.save(); g.shadowColor = "rgba(255,194,71,.55)"; g.shadowBlur = 70;
+    box(wx, wy, ww, wh, [40, 40, 16, 16]); g.fillStyle = "#3B3170"; g.fill(); g.restore();
+    const glass = g.createLinearGradient(0, wy, 0, wy + wh);
+    glass.addColorStop(0, "#FFD978"); glass.addColorStop(1, "#FFB22E");
+    box(wx + 14, wy + 14, ww - 28, wh - 28, [30, 30, 8, 8]); g.fillStyle = glass; g.fill();
+    const eq = u === S.user ? S.eq : {};
+    const perde = eq.perde && item(eq.perde);
+    if (perde) { g.fillStyle = perde.color; g.fillRect(wx + 14, wy + 14, 46, wh - 28); g.fillRect(wx + ww - 60, wy + 14, 46, wh - 28); }
+    g.fillStyle = "rgba(42,26,0,.82)"; g.font = `800 112px ${DISP}`; g.textAlign = "center";
+    g.fillText(String(u.name || "?")[0].toLocaleUpperCase("tr"), wx + ww / 2, wy + wh / 2 + 40);
+    g.fillStyle = "#3B3170"; g.fillRect(wx + ww / 2 - 5, wy + 14, 10, wh - 28); g.fillRect(wx + 14, wy + wh / 2 - 5, ww - 28, 10);
+    const evcil = eq.evcil && item(eq.evcil), saksi = eq.saksi && item(eq.saksi);
+    g.font = `64px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    if (saksi) g.fillText(saksi.emoji, wx + ww - 50, wy + wh + 10);
+    if (evcil) g.fillText(evcil.emoji, wx + 50, wy + wh + 10);
+    g.textAlign = "left";
+
+    // Kimlik bilgileri
+    const tx = wx + ww + 60, tw = cx + cw - 50 - tx;
+    let size = 60; g.font = `800 ${size}px ${DISP}`;
+    while (size > 30 && g.measureText("@" + h).width > tw) { size -= 2; g.font = `800 ${size}px ${DISP}`; }
+    g.fillStyle = FG; g.fillText(fit("@" + h, tw), tx, wy + 56);
+    g.fillStyle = LAMP; g.font = `600 34px ${BODY}`; g.fillText(fit(titleFor(days).name, tw), tx, wy + 108);
+    const wake = D.wakes.find((w) => w.id === u.wake);
+    const games = (u.games || []).map((id) => D.games.find((x) => x.id === id)?.short).filter(Boolean);
+    const rows = [["EVDE", `${nf(days)}. gün`], ["IŞIK YANAR", wake?.title || "-"], ["ANA MESAİ", games.slice(0, 2).join(", ") || "Dizi, uyku"], ["ŞEHİR", u.city || "Gizli"]];
+    const colW = (tw - 30) / 2;
+    rows.forEach(([k, v], i) => {
+      const x = tx + (i % 2) * (colW + 30), y = wy + 190 + Math.floor(i / 2) * 110;
+      g.fillStyle = DIM; g.font = `600 22px ${BODY}`; g.fillText(k, x, y);
+      g.fillStyle = FG; g.font = `600 32px ${BODY}`; g.fillText(fit(v, colW), x, y + 44);
+    });
+
+    dash(cy + ch - 110);
+    g.fillStyle = DIM; g.font = `500 24px ${BODY}`;
+    g.fillText(`No ${cardNo(u)}`, cx + 50, cy + ch - 52);
+    g.textAlign = "right"; g.fillText("evdeyiz apt. · süresiz", cx + cw - 50, cy + ch - 52); g.textAlign = "left";
+
+    // Alt yazı
+    g.fillStyle = FG; g.font = `800 64px ${DISP}`; g.fillText("Ben de ev genciyim.", 90, 1060);
+    g.fillStyle = LAMP; g.fillText("Sen de.", 90, 1144);
+    g.fillStyle = DIM; g.font = `500 30px ${BODY}`; g.fillText(SITE, 90, 1250);
+    return c;
   }
 
   /* "2 yeni not" düğmesi: panoda bir süre kalınca belirir */
@@ -1722,7 +1824,7 @@ window.EV_DATA = {
     like(el) { const id = el.dataset.v; S.likes[id] = !S.likes[id]; save(); render(); },
     repost(el) { const id = el.dataset.v; S.reposts[id] = !S.reposts[id]; save(); render(); if (S.reposts[id]) toast("Notu panoya tekrar astın"); },
     reply() { toast("Yorumlar bir sonraki sürümde geliyor"); },
-    "share-post"(el) { const p = allPostsRaw().find((x) => x.id === el.dataset.v); if (p) copyText(`"${p.text}" · evdeyiz panosundan`, "Not kopyalandı"); },
+    "share-post"(el) { const p = allPostsRaw().find((x) => x.id === el.dataset.v); if (p) copyText(`"${p.text}" · evdeyiz panosundan: ${SITE}`, "Not kopyalandı"); },
     vote(el) { S.polls[el.dataset.id] = Number(el.dataset.v); save(); render(); toast("Oyun toplantı tutanağına geçti"); },
 
     game(el) { ui.game = el.dataset.v; render(); },
@@ -1747,7 +1849,7 @@ window.EV_DATA = {
       const r = calcResult();
       S.calcUsed = true;
       S.posts.push({ id: "my" + Date.now(), at: Date.now(), anon: false,
-        text: `Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif saatine ${nf(r.saatlik)} ₺ ediyor. ${r.evKal ? "Evde kalıyorum." : "Bu teklifi düşünüyorum."} #30kyaHayır`,
+        text: `Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif saatine ${nf(r.saatlik)} ₺ ediyor. ${r.evKal ? "Evde kalıyorum." : "Bu teklifi düşünüyorum."} #fişimikestim`,
         calc: { maas: S.calc.maas, saatlik: Math.round(r.saatlik), evKal: r.evKal }, r: { reply: 0, repost: 0, like: 0, views: 1 } });
       earn(3); afterPost(S.posts[S.posts.length - 1].id, "fiş");
       S.tab = "feed"; S.feedTab = "foryou"; ui.hashtag = null; ui.search = ""; save(); render(); top();
@@ -1755,9 +1857,34 @@ window.EV_DATA = {
     },
     "calc-copy"() {
       const r = calcResult(); S.calcUsed = true; save();
-      copyText(`Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif = saati ${nf(r.saatlik)} ₺. Evde ayda ${nf(S.calc.ev)} ₺ ile yaşıyorum. Damga: ${r.evKal ? "EVDE KAL" : "BİR DÜŞÜN"}. Sen de kes: evdeyiz`);
+      copyText(`Fişimi kestim: ${nf(S.calc.maas)} ₺ teklif = saati ${nf(r.saatlik)} ₺. Evde ayda ${nf(S.calc.ev)} ₺ ile yaşıyorum. Damga: ${r.evKal ? "EVDE KAL" : "BİR DÜŞÜN"}. Sen de kes: ${SITE}`);
     },
-    "id-copy"() { const t = titleFor(daysAtHome()); copyText(`Ev Genci Sakin Kartım: @${myHandle()} · Daire ${daire(myHandle())} · ${t.name} · evde ${nf(daysAtHome())}. gün · No ${cardNo(S.user)}. Sen de taşın: evdeyiz`, "Sakin kartı kopyalandı"); },
+    "id-copy"() { copyText(cardText(), "Sakin kartı kopyalandı"); },
+    async "card-share"(el) {
+      if (el.disabled) return;
+      el.disabled = true;
+      try {
+        const canvas = await drawCard();
+        ui.cardUrl = canvas.toDataURL("image/png");
+        cardFile = null;
+        if (window.File && canvas.toBlob) {
+          const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+          if (blob) cardFile = new File([blob], cardFileName(), { type: "image/png" });
+        }
+        ui.modal = "card"; render();
+      } catch {
+        toast("Görsel hazırlanamadı. Metni kopyalayabilirsin.");
+        el.disabled = false;
+      }
+    },
+    async "card-send"() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: "share-image", url: ui.cardUrl, text: cardText() }));
+        return;
+      }
+      try { await navigator.share({ files: [cardFile], text: cardText() }); }
+      catch (e) { if (e && e.name !== "AbortError") toast("Paylaşılamadı. Görseli kaydedip paylaşabilirsin."); }
+    },
     ptab(el) { ui.ptab = el.dataset.v; render(); },
 
     "shop-cat"(el) { ui.shopCat = el.dataset.v; render(); },
