@@ -1,0 +1,2 @@
+/* Supabase bağlantısı. Anahtar herkese açık "anon" anahtarıdır; yetkiler veritabanı kurallarıyla (RLS) korunur. */
+window.EV_CONFIG = { url: "https://iyqrdkmlnnkrscbwxrxm.supabase.co", key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cXJka21sbm5rcnNjYnd4cnhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5Mzg4NjUsImV4cCI6MjExMDUxNDg2NX0.iTV4VkPwiiY74V0rm4cuY4388B8rH-sg-722rY-mCxE" };
